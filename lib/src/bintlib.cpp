@@ -94,6 +94,10 @@ std::string BigInt::concat_number(std::vector<uint32_t> chunks, bool is_negative
 	return number;
 }
 
+std::string BigInt::get_number() {
+	return BigInt::concat_number(this->_chunks, this->_is_negative);
+}
+
 BigInt::BigInt(std::string number)
 {
 	if (number.size() == 0)
@@ -118,32 +122,63 @@ std::ostream& operator <<(std::ostream& os, const BigInt& number)
 
 BigInt BigInt::sum(const BigInt& lhs, const BigInt& rhs)
 {
-	std::vector<uint32_t> result;
-
-	size_t max_size = std::max(lhs._chunks.size(), rhs._chunks.size());
-	result.reserve(max_size + 1);  
-
-	uint64_t carry = 0;
-
-	for (size_t i = 0; i < max_size; ++i) {
-		uint64_t a = (i < lhs._chunks.size()) ? static_cast<uint64_t>(lhs._chunks[i]) : 0;
-		uint64_t b = (i < rhs._chunks.size()) ? static_cast<uint64_t>(rhs._chunks[i]) : 0;
-
-		uint64_t sum = a + b + carry;
-
-		result.push_back(static_cast<uint32_t>(sum % BASE));
-
-		carry = sum / BASE;
-	}
-
-	if (carry > 0) {
-		result.push_back(static_cast<uint32_t>(carry));
-	}
-
 	BigInt res("0");
-	res._chunks = result;
-	res._is_negative = false;
+
+	if (lhs._is_negative == rhs._is_negative) {
+		std::vector<uint32_t> result;
+		size_t max_size = std::max(lhs._chunks.size(), rhs._chunks.size());
+		result.reserve(max_size + 1);
+
+		uint64_t carry = 0;
+
+		for (size_t i = 0; i < max_size; ++i) {
+			uint64_t a = (i < lhs._chunks.size()) ? static_cast<uint64_t>(lhs._chunks[i]) : 0;
+			uint64_t b = (i < rhs._chunks.size()) ? static_cast<uint64_t>(rhs._chunks[i]) : 0;
+
+			uint64_t sum = a + b + carry;
+			result.push_back(static_cast<uint32_t>(sum % BASE));
+			carry = sum / BASE;
+		}
+
+		if (carry > 0) {
+			result.push_back(static_cast<uint32_t>(carry));
+		}
+		res._chunks = result;
+		res._is_negative = lhs._is_negative;
+	}
+	else
+	{
+		size_t option = BigInt::_compare_abs_bigints(lhs, rhs);
+
+		switch (option)
+		{
+		case 1:
+			res._is_negative = lhs._is_negative;
+			res._chunks = BigInt::_sub_chunks(lhs, rhs)._chunks;
+			break;
+		case 2:
+			return res;
+			break;
+		case 3:
+			res._is_negative = rhs._is_negative;
+			res._chunks = BigInt::_sub_chunks(rhs, lhs)._chunks;
+			break;
+		default:
+			break;
+		}
+	}
+
+	
 	return res;
+}
+
+// a - b = (-b) + a
+BigInt BigInt::sub(const BigInt& lhs, const BigInt& rhs)
+{
+	BigInt tmp("0");
+	tmp._chunks = rhs._chunks;
+	tmp._is_negative = !rhs._is_negative;
+	return BigInt::sum(lhs, tmp);
 }
 
 BigInt BigInt::simple_mul(const BigInt& lhs, const BigInt& rhs)
@@ -210,4 +245,91 @@ BigInt BigInt::montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt
 {
 	// TODO: возведение в степень по модулю для больших чисел методом Монтгомери с использованием бинарного/q-арного алгоритма
 	throw std::logic_error("Not implemented");
+}
+
+// return 0 when number1 > number2, 1 when number1 = number2 and 2 when number1 < number2
+size_t BigInt::_compare_abs_bigints(const BigInt& number1, const BigInt& number2)
+{
+	if (number1._chunks.size() > number2._chunks.size())
+	{
+		return 1;
+	}
+	else if (number1._chunks.size() <  number2._chunks.size())
+	{
+		return 3;
+	}
+	else
+	{
+		for (size_t i = number1._chunks.size() - 1; i > 0; i--)
+		{
+			if (number1._chunks[i] > number2._chunks[i])
+			{
+				return 1;
+			}
+			else if (number1._chunks[i] < number2._chunks[i])
+			{
+				return 3;
+			}
+		}
+	}
+	return 2;
+}
+
+// this method only used when abs(lhs) > abs(rhs)
+BigInt BigInt::_sub_chunks(const BigInt& lhs, const BigInt& rhs) {
+	BigInt res("0");
+	std::vector<uint32_t> result;
+	result.reserve(lhs._chunks.size());
+
+	int64_t borrow = 0;
+
+	for (size_t i = 0; i < lhs._chunks.size(); ++i) {
+		int64_t a = static_cast<int64_t>(lhs._chunks[i]);
+		int64_t b = (i < rhs._chunks.size()) ? static_cast<int64_t>(rhs._chunks[i]) : 0;
+
+		int64_t diff = a - b - borrow;
+
+		if (diff < 0) {
+			diff += BigInt::BASE;
+			borrow = 1;
+		}
+		else {
+			borrow = 0;
+		}
+
+		result.push_back(static_cast<uint32_t>(diff));
+	}
+
+	while (result.size() > 1 && result.back() == 0) {
+		result.pop_back();
+	}
+
+	res._chunks = result;
+	res._is_negative = false;
+	return res;
+}
+
+
+BigInt& BigInt::operator=(const BigInt& other)
+{
+	if (this != &other) { 
+		this->_is_negative = other._is_negative;
+		this->_chunks = other._chunks;
+	}
+	return *this;
+}
+
+BigInt BigInt::operator+(const BigInt& other) const 
+{
+	return BigInt::sum(*this, other);
+}
+
+BigInt BigInt::operator-(const BigInt& other) const
+{
+	return BigInt::sub(*this, other);
+}
+
+BigInt BigInt::operator*(const BigInt& other) const
+{
+	return BigInt::simple_mul(*this, other);
 }

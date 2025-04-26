@@ -24,4 +24,26 @@ namespace test_bintlib
             REQUIRE(result == "-12345678901234567890");
         }
     }
+
+    TEST_CASE("BigInt Sum", "[sum]") {
+        BigInt number1 = BigInt("1234567890");
+        BigInt number2 = BigInt("-455675676762");
+        std::string result = (number1 + number2).get_number();
+
+        SECTION("Check sum") {
+            REQUIRE(result == "-454441108872");
+        }
+    }
+
+    TEST_CASE("BigInt Sub", "[sub]") {
+        BigInt number1 = BigInt("1234567890");
+        BigInt number2 = BigInt("-455675676762");
+        std::string result = (number1 - number2).get_number();
+
+        SECTION("Check sub") {
+            REQUIRE(result == "456910244652");
+        }
+    }
+
+
 }
