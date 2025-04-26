@@ -4,7 +4,7 @@ using namespace std;
 
 int main()
 {
-	BigInt number = BigInt("12345678901234567890000000000000");
+	BigInt number = BigInt("12345678901234567890");
 	std::cout << number;
 	return 0;
 }

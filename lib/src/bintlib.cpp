@@ -1,7 +1,8 @@
 ﻿#include <bintlib.h>
 
-void BigInt::_parse_number(std::string number)
+std::vector<uint32_t> BigInt::parse_number(std::string number, uint64_t base)
 {
+	std::vector<uint32_t> chunks;
 	std::string digits = "0123456789";
 	while (number.size() > 0)
 	{
@@ -19,10 +20,10 @@ void BigInt::_parse_number(std::string number)
 
 			uint64_t digit = (uint64_t)symbol - '0';
 			remainder = remainder * 10 + digit;
-			if (remainder > _base - 1)
+			if (remainder > base - 1)
 			{
-				quotient += (char)(remainder / _base + '0');
-				remainder = remainder % _base;
+				quotient += (char)(remainder / base + '0');
+				remainder = remainder % base;
 			}
 			else
 			{
@@ -35,15 +36,16 @@ void BigInt::_parse_number(std::string number)
 			quotient.erase(quotient.begin());
 		}
 
-		_chunks.push_back((uint32_t)remainder);
+		chunks.push_back((uint32_t)remainder);
 		number = quotient;
 	}
+	return chunks;
 }
 
-std::string BigInt::_concat_number() const
+std::string BigInt::concat_number(std::vector<uint32_t> chunks, bool is_negative, uint64_t base)
 {
 	std::vector<bool> bits;
-	for (auto chunk : _chunks)
+	for (auto chunk : chunks)
 	{
 		for (size_t i = 0; i < 32; i++)
 		{
@@ -84,12 +86,15 @@ std::string BigInt::_concat_number() const
 		bits = quotient;
 	}
 
+	if (is_negative)
+		number += '-';
+
 	std::reverse(number.begin(), number.end());
 
 	return number;
 }
 
-BigInt::BigInt(std::string number = "0")
+BigInt::BigInt(std::string number)
 {
 	if (number.size() == 0)
 	{
@@ -102,80 +107,83 @@ BigInt::BigInt(std::string number = "0")
 		number = number.substr(1);
 	}
 
-	_base = (uint64_t)UINT32_MAX + 1;
-
-	_parse_number(number);
+	_chunks = parse_number(number, BASE);
 }
 
 std::ostream& operator <<(std::ostream& os, const BigInt& number)
 {
-	if (number._is_negative)
-		os << '-';
-	os << number._concat_number();
+	os << BigInt::concat_number(number._chunks, number._is_negative, BigInt::BASE);
 	return os;
 }
 
 BigInt BigInt::sum(const BigInt& lhs, const BigInt& rhs)
 {
 	// TODO: сложение больших чисел
-}
-
-BigInt BigInt::sub(const BigInt& lhs, const BigInt& rhs)
-{
-	// TODO: вычитание больших чисел (обратное сложению)
+	throw std::logic_error("Not implemented");
 }
 
 BigInt BigInt::simple_mul(const BigInt& lhs, const BigInt& rhs)
 {
 	// TODO: умножение больших чисел "в столбик"
+	throw std::logic_error("Not implemented");
 }
 
 BigInt BigInt::karatsuba_mul(const BigInt& lhs, const BigInt& rhs)
 {
 	// TODO: умножение больших чисел методом Карацубы
+	throw std::logic_error("Not implemented");
 }
 
 std::pair<BigInt, BigInt> BigInt::div(const BigInt& lhs, const BigInt& rhs)
 {
 	// TODO: деление нацело больших чисел (возвращает частное и остаток)
+	throw std::logic_error("Not implemented");
 }
 
 BigInt BigInt::mod(const BigInt& lhs, const BigInt& rhs)
 {
 	// TODO: остаток от деления больших чисел
+	throw std::logic_error("Not implemented");
 }
 
 std::tuple<BigInt, BigInt, BigInt> BigInt::extended_gcd(const BigInt& lhs, const BigInt& rhs)
 {
 	// TODO: поиск НОД расширенным алгоритмом Евклида
+	throw std::logic_error("Not implemented");
 }
 
 BigInt BigInt::gcd(const BigInt& lhs, const BigInt& rhs)
 {
 	// TODO: поиск НОД алгоритмом Евклида (сначала реализовать расширенный алгоритм Евклида)
+	throw std::logic_error("Not implemented");
 }
 
 BigInt BigInt::left_shift(const BigInt& number, int shift)
 {
 	// TODO: левый сдвиг большого числа на заданное число разрядов (деление на степень 2)
+	throw std::logic_error("Not implemented");
 }
 
 BigInt BigInt::right_shift(const BigInt& number, int shift)
 {
 	// TODO: правый сдвиг большого числа на заданное число разрядов (умножение на степень 2)
+	throw std::logic_error("Not implemented");
 }
 
 BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module)
 {
 	// TODO: умножение больших чисел методом Монтгомери по модулю
+	throw std::logic_error("Not implemented");
 }
 
-BigInt BigInt::pow(const BigInt& number, const BigInt& degree, int base = 2)
+BigInt BigInt::pow(const BigInt& number, const BigInt& degree, int base)
 {
 	// TODO: возведение в степень для больших чисел бинарным (default) и q-арным алгоритмом
+	throw std::logic_error("Not implemented");
 }
 
-BigInt BigInt::montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt& module, int base = 2)
+BigInt BigInt::montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt& module, int base)
 {
 	// TODO: возведение в степень по модулю для больших чисел методом Монтгомери с использованием бинарного/q-арного алгоритма
+	throw std::logic_error("Not implemented");
 }

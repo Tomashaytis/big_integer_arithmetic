@@ -11,14 +11,13 @@ class BigInt
 {
 private:
 	bool _is_negative;
-	std::list<uint32_t> _chunks;
-	uint64_t _base;
-	void _parse_number(std::string number);
-	std::string _concat_number() const;
+	std::vector<uint32_t> _chunks;
 public:
+	static const uint64_t BASE = (uint64_t)UINT32_MAX + 1;
 	BigInt(std::string number);
+	static std::vector<uint32_t> parse_number(std::string number, uint64_t base = (uint64_t)UINT32_MAX + 1);
+	static std::string concat_number(std::vector<uint32_t> chunks, bool is_negative = false, uint64_t base = (uint64_t)UINT32_MAX + 1);
 	static BigInt sum(const BigInt& lhs, const BigInt& rhs);
-	static BigInt sub(const BigInt& lhs, const BigInt& rhs);
 	static BigInt simple_mul(const BigInt& lhs, const BigInt& rhs);
 	static BigInt karatsuba_mul(const BigInt& lhs, const BigInt& rhs);
 	static std::pair<BigInt, BigInt> div(const BigInt& lhs, const BigInt& rhs);
