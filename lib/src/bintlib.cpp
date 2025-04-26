@@ -118,8 +118,32 @@ std::ostream& operator <<(std::ostream& os, const BigInt& number)
 
 BigInt BigInt::sum(const BigInt& lhs, const BigInt& rhs)
 {
-	// TODO: сложение больших чисел
-	throw std::logic_error("Not implemented");
+	std::vector<uint32_t> result;
+
+	size_t max_size = std::max(lhs._chunks.size(), rhs._chunks.size());
+	result.reserve(max_size + 1);  
+
+	uint64_t carry = 0;
+
+	for (size_t i = 0; i < max_size; ++i) {
+		uint64_t a = (i < lhs._chunks.size()) ? static_cast<uint64_t>(lhs._chunks[i]) : 0;
+		uint64_t b = (i < rhs._chunks.size()) ? static_cast<uint64_t>(rhs._chunks[i]) : 0;
+
+		uint64_t sum = a + b + carry;
+
+		result.push_back(static_cast<uint32_t>(sum % BASE));
+
+		carry = sum / BASE;
+	}
+
+	if (carry > 0) {
+		result.push_back(static_cast<uint32_t>(carry));
+	}
+
+	BigInt res("0");
+	res._chunks = result;
+	res._is_negative = false;
+	return res;
 }
 
 BigInt BigInt::simple_mul(const BigInt& lhs, const BigInt& rhs)
