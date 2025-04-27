@@ -154,20 +154,20 @@ BigInt BigInt::sum(const BigInt& lhs, const BigInt& rhs)
 	}
 	else
 	{
-		size_t option = BigInt::_compare_abs_bigints(lhs, rhs);
+		size_t option = BigInt::compare_abs_bigints(lhs, rhs);
 
 		switch (option)
 		{
 		case 1:
 			res._is_negative = lhs._is_negative;
-			res._chunks = BigInt::_sub_chunks(lhs, rhs)._chunks;
+			res._chunks = BigInt::sub_chunks(lhs, rhs)._chunks;
 			break;
 		case 2:
 			return res;
 			break;
 		case 3:
 			res._is_negative = rhs._is_negative;
-			res._chunks = BigInt::_sub_chunks(rhs, lhs)._chunks;
+			res._chunks = BigInt::sub_chunks(rhs, lhs)._chunks;
 			break;
 		default:
 			break;
@@ -278,7 +278,7 @@ BigInt BigInt::montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt
 
 // Compare abs 2 numbers
 // return 1 when number1 > number2, 2 when number1 = number2 and 3 when number1 < number2
-size_t BigInt::_compare_abs_bigints(const BigInt& number1, const BigInt& number2)
+size_t BigInt::compare_abs_bigints(const BigInt& number1, const BigInt& number2)
 {
 	if (number1._chunks.size() > number2._chunks.size())
 	{
@@ -306,7 +306,7 @@ size_t BigInt::_compare_abs_bigints(const BigInt& number1, const BigInt& number2
 }
 
 // this method only used when abs(lhs) > abs(rhs)
-BigInt BigInt::_sub_chunks(const BigInt& lhs, const BigInt& rhs) {
+BigInt BigInt::sub_chunks(const BigInt& lhs, const BigInt& rhs) {
 	BigInt res("0");
 	std::vector<uint32_t> result;
 	result.reserve(lhs._chunks.size());

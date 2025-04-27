@@ -12,9 +12,6 @@ class BigInt
 private:
 	bool _is_negative;
 	std::vector<uint32_t> _chunks;
-
-	static size_t _compare_abs_bigints(const BigInt& number1, const BigInt& number2);
-	static BigInt _sub_chunks(const BigInt& lhs, const BigInt& rhs);
 public:
 	static const uint64_t BASE = (uint64_t)UINT32_MAX + 1;
 	BigInt(std::string number);
@@ -34,7 +31,9 @@ public:
 	static BigInt montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module);
 	static BigInt pow(const BigInt& number, const BigInt& degree, int base = 2);
 	static BigInt montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt& module, int base = 2);
-	
+	static size_t compare_abs_bigints(const BigInt& number1, const BigInt& number2);
+	static BigInt sub_chunks(const BigInt& lhs, const BigInt& rhs);
+
 	std::string get_number();
 	BigInt& operator=(const BigInt& other);
 	BigInt operator+(const BigInt& other) const;
