@@ -73,8 +73,92 @@ std::string BigInt::concat_number(std::vector<uint32_t> chunks, bool is_negative
 	return number;
 }
 
+int BigInt::abs_cmp(const BigInt& number1, const BigInt& number2) {
+	if (number1._chunks.size() > number2._chunks.size())
+		return 1;
+	else if (number1._chunks.size() < number2._chunks.size())
+		return -1;
+	else {
+		for (int i = (int)number1._chunks.size() - 1; i >= 0; i--) {
+			if (number1._chunks[i] > number2._chunks[i])
+				return 1;
+			else if (number1._chunks[i] < number2._chunks[i])
+				return -1;
+		}
+	}
+	return 0;
+}
+
+BigInt BigInt::sub_chunks(const BigInt& lhs, const BigInt& rhs) {
+	BigInt res;
+	std::vector<uint32_t> result;
+	result.reserve(lhs._chunks.size());
+
+	int64_t borrow = 0;
+
+	for (size_t i = 0; i < lhs._chunks.size(); ++i) {
+		int64_t a = static_cast<int64_t>(lhs._chunks[i]);
+		int64_t b = (i < rhs._chunks.size()) ? static_cast<int64_t>(rhs._chunks[i]) : 0;
+
+		int64_t diff = a - b - borrow;
+
+		if (diff < 0) {
+			diff += BigInt::BASE;
+			borrow = 1;
+		}
+		else {
+			borrow = 0;
+		}
+
+		result.push_back(static_cast<uint32_t>(diff));
+	}
+
+	while (result.size() > 1 && result.back() == 0) {
+		result.pop_back();
+	}
+
+	res._chunks = result;
+	res._is_negative = false;
+	return res;
+}
+
+uint32_t BigInt::leading_zeros(uint32_t value) {
+	if (value == 0)
+		return 32;
+
+	uint32_t count = 0;
+	for (int i = 31; i >= 0; i--)
+	{
+		if ((value >> i) & 1)
+			break;
+		count++;
+	}
+	return count;
+}
+
+uint32_t BigInt::estimate_quotient(const BigInt dividend, const BigInt divider) {
+	if (dividend._chunks.size() < divider._chunks.size())
+		return 0;
+
+	uint32_t a = dividend._chunks.back();
+	uint32_t b = (dividend._chunks.size() > 1) ? dividend._chunks[dividend._chunks.size() - 2] : 0;
+	uint32_t e = divider._chunks.back();
+
+	uint64_t c = (uint64_t)a << 32;
+	uint64_t tmp = (c + b) / (uint64_t)e;
+	uint32_t q = (tmp > UINT32_MAX) ? UINT32_MAX : (uint32_t)tmp;
+
+	return q;
+}
+
 std::string BigInt::to_string() const {
 	return BigInt::concat_number(_chunks, _is_negative);
+}
+
+BigInt BigInt::abs(const BigInt& number) {
+	BigInt result = number;
+	result._is_negative = false;
+	return result;
 }
 
 BigInt::BigInt(std::string number) {
@@ -89,6 +173,11 @@ BigInt::BigInt(std::string number) {
 		throw new std::invalid_argument("Big number is undefined");
 
 	_chunks = parse_number(number, BASE);
+}
+
+BigInt::BigInt(uint32_t chunk, bool is_negative) {
+	_is_negative = is_negative;
+	_chunks.push_back(chunk);
 }
 
 BigInt::BigInt(std::vector<uint32_t> chunks, bool is_negative) {
@@ -224,13 +313,88 @@ BigInt BigInt::karatsuba_mul(const BigInt& lhs, const BigInt& rhs) {
 }
 
 std::pair<BigInt, BigInt> BigInt::div(const BigInt& lhs, const BigInt& rhs) {
-	// TODO: деление нацело больших чисел (возвращает частное и остаток)
-	throw std::logic_error("Not implemented");
-}
+	BigInt zero;
+	if (rhs == zero)
+		throw std::invalid_argument("Division by zero");
 
+	uint32_t shift = leading_zeros(rhs._chunks.back());
+	BigInt dividend = BigInt::abs(lhs << shift);
+	BigInt divider = BigInt::abs(rhs << shift);
+
+	std::list<uint32_t> quotient_chunks;
+	BigInt remainder;
+	remainder._chunks.clear();
+
+	for (int i = (int)dividend._chunks.size() - 1; i >= 0; i--) {
+		remainder._chunks.insert(remainder._chunks.begin(), dividend._chunks[i]);
+
+		while (!remainder._chunks.empty() && remainder._chunks.back() == 0) {
+			remainder._chunks.pop_back();
+		}
+		if (remainder < divider) {
+			quotient_chunks.push_front(0);
+			continue;
+		}
+
+		uint32_t q = BigInt::estimate_quotient(remainder, divider);
+
+		while (divider * BigInt(q) > remainder) {
+			q--;
+		}
+		
+		quotient_chunks.push_front(q);
+		remainder = remainder - BigInt(q) * divider;
+	}
+
+	remainder = remainder >> shift;
+	while (!quotient_chunks.empty() && quotient_chunks.back() == 0) {
+		quotient_chunks.pop_back();
+	}
+
+	if (lhs._is_negative ^ rhs._is_negative)
+		remainder = remainder - BigInt::abs(rhs);
+
+	BigInt quotient(std::vector<uint32_t>(quotient_chunks.begin(), quotient_chunks.end()), lhs._is_negative ^ rhs._is_negative);
+	return std::pair<BigInt, BigInt>(quotient, remainder);
+}
+ 
 BigInt BigInt::mod(const BigInt& lhs, const BigInt& rhs) {
-	// TODO: остаток от деления больших чисел
-	throw std::logic_error("Not implemented");
+	BigInt zero;
+	if (rhs == zero)
+		throw std::invalid_argument("Division by zero");
+
+	uint32_t shift = leading_zeros(rhs._chunks.back());
+	BigInt dividend = BigInt::abs(lhs << shift);
+	BigInt divider = BigInt::abs(rhs << shift);
+
+	BigInt remainder;
+	remainder._chunks.clear();
+
+	for (int i = (int)dividend._chunks.size() - 1; i >= 0; i--) {
+		remainder._chunks.insert(remainder._chunks.begin(), dividend._chunks[i]);
+
+		while (!remainder._chunks.empty() && remainder._chunks.back() == 0) {
+			remainder._chunks.pop_back();
+		}
+		if (remainder < divider) {
+			continue;
+		}
+
+		uint32_t q = BigInt::estimate_quotient(remainder, divider);
+
+		while (divider * BigInt(q) > remainder) {
+			q--;
+		}
+
+		remainder = remainder - BigInt(q) * divider;
+	}
+
+	remainder = remainder >> shift;
+
+	if (lhs._is_negative ^ rhs._is_negative)
+		remainder = remainder - BigInt::abs(rhs);
+
+	return remainder;
 }
 
 std::tuple<BigInt, BigInt, BigInt> BigInt::extended_gcd(const BigInt& lhs, const BigInt& rhs) {
@@ -243,14 +407,58 @@ BigInt BigInt::gcd(const BigInt& lhs, const BigInt& rhs) {
 	throw std::logic_error("Not implemented");
 }
 
-BigInt BigInt::left_shift(const BigInt& number, int shift) {
-	// TODO: левый сдвиг большого числа на заданное число разрядов (деление на степень 2)
-	throw std::logic_error("Not implemented");
+BigInt BigInt::left_shift(const BigInt& number, uint32_t shift) {
+	if (shift == 0)
+		return number;
+	uint32_t bit_shift = shift % 32;
+	uint32_t chunk_shift = shift / 32;
+
+	std::list<uint32_t> chunks1(number._chunks.begin(), number._chunks.end());
+
+	for (size_t i = 0; i < chunk_shift; i++)
+		chunks1.push_front(0);
+
+	std::vector chunks2(chunks1.begin(), chunks1.end());
+
+	if (bit_shift > 0) {
+		uint32_t carry = 0;
+		for (size_t i = 0; i < chunks2.size(); i++) {
+			uint32_t new_carry = chunks2[i] >> (32 - bit_shift);
+			chunks2[i] = (chunks2[i] << bit_shift) | carry;
+			carry = new_carry;
+		}
+		if (carry != 0) {
+			chunks2.push_back(carry);
+		}
+	}
+	return BigInt(chunks2, number._is_negative);
 }
 
-BigInt BigInt::right_shift(const BigInt& number, int shift) {
-	// TODO: правый сдвиг большого числа на заданное число разрядов (умножение на степень 2)
-	throw std::logic_error("Not implemented");
+BigInt BigInt::right_shift(const BigInt& number, uint32_t shift) {
+	if (shift == 0)
+		return number;
+	uint32_t bit_shift = shift % 32;
+	uint32_t chunk_shift = shift / 32;
+
+	std::list<uint32_t> chunks1(number._chunks.begin(), number._chunks.end());
+
+	for (size_t i = 0; i < chunk_shift; i++) {
+		chunks1.pop_front();
+		if (chunks1.size() == 0)
+			return BigInt();
+	}
+
+	std::vector chunks2(chunks1.begin(), chunks1.end());
+
+	if (bit_shift > 0) {
+		uint32_t carry = 0;
+		for (int i = (int)chunks2.size() - 1; i >= 0; i--) {
+			uint32_t new_carry = chunks2[i] << (32 - bit_shift);
+			chunks2[i] = (chunks2[i] >> bit_shift) | carry;
+			carry = new_carry;
+		}
+	}
+	return BigInt(chunks2, number._is_negative);
 }
 
 BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module) {
@@ -259,7 +467,7 @@ BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt
 }
 
 BigInt BigInt::pow(const BigInt& number, const BigInt& degree, int base) {
-	// TODO: возведение в степень для больших чисел бинарным (default) и q-арным алгоритмом
+	// TODO: возведение в степень для больших чисел бинарным (default) и q-арным алгоритмом привет от младшего бррата паши, димы
 	throw std::logic_error("Not implemented");
 }
 
@@ -268,63 +476,44 @@ BigInt BigInt::montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt
 	throw std::logic_error("Not implemented");
 }
 
-// abs comparator for 2 numbers
-int BigInt::abs_cmp(const BigInt& number1, const BigInt& number2) {
-	if (number1._chunks.size() > number2._chunks.size())
-		return 1;
-	else if (number1._chunks.size() <  number2._chunks.size())
-		return -1;
-	else {
-		for (size_t i = number1._chunks.size() - 1; i > 0; --i) {
-			if (number1._chunks[i] > number2._chunks[i])
-				return 1;
-			else if (number1._chunks[i] < number2._chunks[i])
-				return -1;
-		}
-	}
-	return 0;
-}
-
-// this method only used when abs(lhs) > abs(rhs)
-BigInt BigInt::sub_chunks(const BigInt& lhs, const BigInt& rhs) {
-	BigInt res("0");
-	std::vector<uint32_t> result;
-	result.reserve(lhs._chunks.size());
-
-	int64_t borrow = 0;
-
-	for (size_t i = 0; i < lhs._chunks.size(); ++i) {
-		int64_t a = static_cast<int64_t>(lhs._chunks[i]);
-		int64_t b = (i < rhs._chunks.size()) ? static_cast<int64_t>(rhs._chunks[i]) : 0;
-
-		int64_t diff = a - b - borrow;
-
-		if (diff < 0) {
-			diff += BigInt::BASE;
-			borrow = 1;
-		}
-		else {
-			borrow = 0;
-		}
-
-		result.push_back(static_cast<uint32_t>(diff));
-	}
-
-	while (result.size() > 1 && result.back() == 0) {
-		result.pop_back();
-	}
-
-	res._chunks = result;
-	res._is_negative = false;
-	return res;
-}
-
-
 BigInt& BigInt::operator =(const BigInt& other) {
-	if (this != &other) { 
-		this->_is_negative = other._is_negative;
-		this->_chunks = other._chunks;
-	}
+	_is_negative = other._is_negative;
+	_chunks = other._chunks;
+	return *this;
+}
+
+BigInt& BigInt::operator +=(const BigInt& other) {
+	*this = *this + other;
+	return *this;
+}
+
+BigInt& BigInt::operator -=(const BigInt& other) {
+	*this = *this - other;
+	return *this;
+}
+
+BigInt& BigInt::operator *=(const BigInt& other) {
+	*this = *this * other;
+	return *this;
+}
+
+BigInt& BigInt::operator /=(const BigInt& other) {
+	*this = *this + other;
+	return *this;
+}
+
+BigInt& BigInt::operator %=(const BigInt& other) {
+	*this = *this % other;
+	return *this;
+}
+
+BigInt& BigInt::operator >>=(uint32_t shift) {
+	*this = *this >> shift;
+	return *this;
+}
+
+BigInt& BigInt::operator <<=(uint32_t shift) {
+	*this = *this << shift;
 	return *this;
 }
 
@@ -346,8 +535,20 @@ BigInt BigInt::operator *(const BigInt& other) const {
 	return BigInt::karatsuba_mul(*this, other);
 }
 
+BigInt BigInt::operator /(const BigInt& other) const {
+	return BigInt::div(*this, other).first;
+}
+
 BigInt BigInt::operator %(const BigInt& other) const {
 	return BigInt::mod(*this, other);
+}
+
+BigInt BigInt::operator >>(uint32_t shift) const {
+	return BigInt::right_shift(*this, shift);
+}
+
+BigInt BigInt::operator <<(uint32_t shift) const {
+	return BigInt::left_shift(*this, shift);
 }
 
 bool BigInt::operator ==(const BigInt& other) const {

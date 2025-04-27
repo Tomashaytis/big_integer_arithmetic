@@ -94,6 +94,55 @@ namespace test_bintlib
         }
     }
 
+    TEST_CASE("BigInt Division", "[division]") {
+        BigInt number1 = BigInt("4556756767624525666272634167235675676762");
+        BigInt number2 = BigInt("12345678901234567890");
+
+        SECTION("Check 1: div") {
+            auto result = BigInt::div(number1, number2);
+            REQUIRE(result.first.to_string() == "369097301499462292799");
+            REQUIRE(result.second.to_string() == "1512927180252052652");
+        }
+
+        SECTION("Check 1: div") {
+            number2 = -number2;
+            auto result = BigInt::div(number1, number2);
+            REQUIRE(result.first.to_string() == "-369097301499462292799");
+            REQUIRE(result.second.to_string() == "-10832751720982515238");
+        }
+    }
+
+    TEST_CASE("BigInt Module", "[module]") {
+        BigInt number1 = BigInt("4556756767624525666272634167235675676762");
+        BigInt number2 = BigInt("12345678901234567890");
+
+        SECTION("Check 1: mod") {
+            std::string result = BigInt::mod(number1, number2).to_string();
+            REQUIRE(result == "1512927180252052652");
+        }
+
+        SECTION("Check 1: mod") {
+            number2 = -number2;
+            std::string result = BigInt::mod(number1, number2).to_string();
+            REQUIRE(result== "-10832751720982515238");
+        }
+    }
+
+    TEST_CASE("BigInt Shift", "[shift]") {
+        BigInt number1 = BigInt("4556756767624525666272634167235675676762");
+        BigInt number2 = BigInt("-12345678901234567890");
+
+        SECTION("Check 1: right_shift") {
+            std::string result = BigInt::right_shift(number1, 100).to_string();
+            REQUIRE(result == "3594647268");
+        }
+
+        SECTION("Check 1: left_shift") {
+            std::string result = BigInt::left_shift(number2, 100).to_string();
+            REQUIRE(result == "-15650007269374987633198475872814597484617284976640");
+        }
+    }
+
     TEST_CASE("BigInt Comparison", "[comparison]") {
         BigInt number1 = BigInt("-12345678901234567890");
         BigInt number2 = BigInt("455675676762455675676762");
