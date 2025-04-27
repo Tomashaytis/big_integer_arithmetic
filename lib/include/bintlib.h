@@ -18,6 +18,7 @@ private:
 public:
 	static const uint64_t BASE = (uint64_t)UINT32_MAX + 1;
 	BigInt(std::string number);
+	BigInt(std::vector<uint32_t>, bool);
 	static std::vector<uint32_t> parse_number(std::string number, uint64_t base = (uint64_t)UINT32_MAX + 1);
 	static std::string concat_number(std::vector<uint32_t> chunks, bool is_negative = false, uint64_t base = (uint64_t)UINT32_MAX + 1);
 	static BigInt sum(const BigInt& lhs, const BigInt& rhs);
@@ -39,6 +40,7 @@ public:
 	BigInt operator+(const BigInt& other) const;
 	BigInt operator-(const BigInt& other) const;
 	BigInt operator*(const BigInt& other) const;
+	BigInt operator%(const BigInt& other) const;
 	
 	friend std::ostream& operator <<(std::ostream& os, const BigInt& number);
 

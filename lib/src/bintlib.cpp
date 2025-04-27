@@ -114,6 +114,12 @@ BigInt::BigInt(std::string number)
 	_chunks = parse_number(number, BASE);
 }
 
+BigInt::BigInt(std::vector<uint32_t> chunks, bool is_negative = false)
+{
+	this->_chunks = chunks;
+	this->_is_negative = is_negative;
+}
+
 std::ostream& operator <<(std::ostream& os, const BigInt& number)
 {
 	os << BigInt::concat_number(number._chunks, number._is_negative, BigInt::BASE);
@@ -168,7 +174,6 @@ BigInt BigInt::sum(const BigInt& lhs, const BigInt& rhs)
 		}
 	}
 
-	
 	return res;
 }
 
@@ -183,8 +188,32 @@ BigInt BigInt::sub(const BigInt& lhs, const BigInt& rhs)
 
 BigInt BigInt::simple_mul(const BigInt& lhs, const BigInt& rhs)
 {
-	// TODO: умножение больших чисел "в столбик"
-	throw std::logic_error("Not implemented");
+	BigInt result("0");
+
+	size_t result_size = lhs._chunks.size() + rhs._chunks.size();
+	std::vector<uint32_t> res_chunks(result_size, 0);
+
+	for (size_t i = 0; i < lhs._chunks.size(); ++i) {
+		uint64_t carry = 0;
+
+		for (size_t j = 0; j < rhs._chunks.size(); ++j) {
+			uint64_t mul = static_cast<uint64_t>(lhs._chunks[i]) * rhs._chunks[j];
+			uint64_t sum = static_cast<uint64_t>(res_chunks[i + j]) + mul + carry;
+
+			res_chunks[i + j] = static_cast<uint32_t>(sum % BASE);
+			carry = sum / BASE;
+		}
+
+		res_chunks[i + rhs._chunks.size()] += static_cast<uint32_t>(carry);
+	}
+
+	while (res_chunks.size() > 1 && res_chunks.back() == 0) {
+		res_chunks.pop_back();
+	}
+
+	result._chunks = res_chunks;
+	result._is_negative = lhs._is_negative ^ rhs._is_negative;
+	return result;
 }
 
 BigInt BigInt::karatsuba_mul(const BigInt& lhs, const BigInt& rhs)
@@ -247,7 +276,8 @@ BigInt BigInt::montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt
 	throw std::logic_error("Not implemented");
 }
 
-// return 0 when number1 > number2, 1 when number1 = number2 and 2 when number1 < number2
+// Compare abs 2 numbers
+// return 1 when number1 > number2, 2 when number1 = number2 and 3 when number1 < number2
 size_t BigInt::_compare_abs_bigints(const BigInt& number1, const BigInt& number2)
 {
 	if (number1._chunks.size() > number2._chunks.size())
@@ -260,7 +290,7 @@ size_t BigInt::_compare_abs_bigints(const BigInt& number1, const BigInt& number2
 	}
 	else
 	{
-		for (size_t i = number1._chunks.size() - 1; i > 0; i--)
+		for (size_t i = number1._chunks.size() - 1; i > 0; --i)
 		{
 			if (number1._chunks[i] > number2._chunks[i])
 			{
@@ -332,4 +362,9 @@ BigInt BigInt::operator-(const BigInt& other) const
 BigInt BigInt::operator*(const BigInt& other) const
 {
 	return BigInt::simple_mul(*this, other);
+}
+
+BigInt BigInt::operator%(const BigInt& other) const
+{
+	return BigInt::mod(*this, other);
 }

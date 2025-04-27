@@ -25,7 +25,7 @@ namespace test_bintlib
         }
     }
 
-    TEST_CASE("BigInt Sum", "[sum]") {
+    TEST_CASE("BigInt Summation", "[summation]") {
         BigInt number1 = BigInt("1234567890");
         BigInt number2 = BigInt("-455675676762");
         std::string result = (number1 + number2).get_number();
@@ -35,7 +35,7 @@ namespace test_bintlib
         }
     }
 
-    TEST_CASE("BigInt Sub", "[sub]") {
+    TEST_CASE("BigInt Subtraction", "[subtraction]") {
         BigInt number1 = BigInt("1234567890");
         BigInt number2 = BigInt("-455675676762");
         std::string result = (number1 - number2).get_number();
@@ -45,5 +45,14 @@ namespace test_bintlib
         }
     }
 
+    TEST_CASE("BigInt Multiplication", "[multiplication]") {
+        BigInt number1 = BigInt("1234567890");
+        BigInt number2 = BigInt("455675676762");
+        std::string result = (number1 * number2).get_number();
+
+        SECTION("Check sub") {
+            REQUIRE(result == "562562558784384372180");
+        }
+    }
 
 }
