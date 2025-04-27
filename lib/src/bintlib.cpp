@@ -359,6 +359,13 @@ BigInt BigInt::operator-(const BigInt& other) const
 	return BigInt::sub(*this, other);
 }
 
+BigInt BigInt::operator-() const
+{
+	BigInt result = *this;
+	result._is_negative = !result._is_negative;
+	return result;
+}
+
 BigInt BigInt::operator*(const BigInt& other) const
 {
 	return BigInt::simple_mul(*this, other);

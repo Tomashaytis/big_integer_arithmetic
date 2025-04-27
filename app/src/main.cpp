@@ -5,6 +5,6 @@ using namespace std;
 int main()
 {
 	BigInt number = BigInt("12345678901234567890");
-	std::cout << number;
+	std::cout << number * -number;
 	return 0;
 }
