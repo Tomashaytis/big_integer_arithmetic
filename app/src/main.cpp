@@ -4,7 +4,8 @@ using namespace std;
 
 int main()
 {
-	BigInt number = BigInt("12345678901234567890");
-	std::cout << number * -number;
+	BigInt number1 = BigInt("1234567890");
+	BigInt number2 = BigInt("455675676762");
+	std::cout << -number2;
 	return 0;
 }

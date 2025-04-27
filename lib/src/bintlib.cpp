@@ -1,40 +1,30 @@
 ﻿#include <bintlib.h>
 
-std::vector<uint32_t> BigInt::parse_number(std::string number, uint64_t base)
-{
+std::vector<uint32_t> BigInt::parse_number(std::string number, uint64_t base) {
 	std::vector<uint32_t> chunks;
 	std::string digits = "0123456789";
-	while (number.size() > 0)
-	{
+	while (number.size() > 0) {
 		uint64_t remainder = 0;
 		std::string quotient = "";
 
-		for (size_t i = 0; i < number.size(); i++)
-		{
+		for (size_t i = 0; i < number.size(); i++) {
 			char symbol = number[i];
 
 			if (digits.find(symbol) == std::string::npos)
-			{
 				throw new std::invalid_argument("Error parsing big number: " + std::to_string(symbol) + " on position " + std::to_string(i));
-			}
 
 			uint64_t digit = (uint64_t)symbol - '0';
 			remainder = remainder * 10 + digit;
-			if (remainder > base - 1)
-			{
+			if (remainder > base - 1) {
 				quotient += (char)(remainder / base + '0');
 				remainder = remainder % base;
 			}
 			else
-			{
 				quotient += '0';
-			}
 		}
 
 		while (!quotient.empty() && quotient.front() == '0')
-		{
 			quotient.erase(quotient.begin());
-		}
 
 		chunks.push_back((uint32_t)remainder);
 		number = quotient;
@@ -42,45 +32,34 @@ std::vector<uint32_t> BigInt::parse_number(std::string number, uint64_t base)
 	return chunks;
 }
 
-std::string BigInt::concat_number(std::vector<uint32_t> chunks, bool is_negative, uint64_t base)
-{
+std::string BigInt::concat_number(std::vector<uint32_t> chunks, bool is_negative, uint64_t base) {
 	std::vector<bool> bits;
-	for (auto chunk : chunks)
-	{
+	for (auto chunk : chunks) {
 		for (size_t i = 0; i < 32; i++)
-		{
 			bits.push_back((chunk >> i) & 1);
-		}
 	}
 	std::reverse(bits.begin(), bits.end());
 
 	std::string number = "";
 
-	while (bits.size() > 0)
-	{
+	while (bits.size() > 0) {
 		uint8_t remainder = 0;
 		std::vector<bool> quotient;
 
-		for (size_t i = 0; i < bits.size(); i++)
-		{
+		for (size_t i = 0; i < bits.size(); i++) {
 			bool bit = bits[i];
 
 			remainder = remainder * 2 + bit;
-			if (remainder > 9)
-			{
+			if (remainder > 9) {
 				quotient.push_back(true);
 				remainder -= 10;
 			}
 			else 
-			{
 				quotient.push_back(false);
-			}
 		}
 
 		while (!quotient.empty() && quotient.front() == false)
-		{
 			quotient.erase(quotient.begin());
-		}
 
 		number += remainder + '0';
 		bits = quotient;
@@ -94,41 +73,38 @@ std::string BigInt::concat_number(std::vector<uint32_t> chunks, bool is_negative
 	return number;
 }
 
-std::string BigInt::get_number() {
-	return BigInt::concat_number(this->_chunks, this->_is_negative);
+std::string BigInt::to_string() const {
+	return BigInt::concat_number(_chunks, _is_negative);
 }
 
-BigInt::BigInt(std::string number)
-{
+BigInt::BigInt(std::string number) {
 	if (number.size() == 0)
-	{
 		throw new std::invalid_argument("Big number is undefined");
-	}
 
 	_is_negative = number[0] == '-';
 	if (_is_negative)
-	{
 		number = number.substr(1);
-	}
+
+	if (number.size() == 0)
+		throw new std::invalid_argument("Big number is undefined");
 
 	_chunks = parse_number(number, BASE);
 }
 
-BigInt::BigInt(std::vector<uint32_t> chunks, bool is_negative = false)
-{
-	this->_chunks = chunks;
-	this->_is_negative = is_negative;
+BigInt::BigInt(std::vector<uint32_t> chunks, bool is_negative) {
+	_chunks = chunks;
+	if (_chunks.size() == 0)
+		_chunks.push_back(0);
+	_is_negative = is_negative;
 }
 
-std::ostream& operator <<(std::ostream& os, const BigInt& number)
-{
+std::ostream& operator <<(std::ostream& os, const BigInt& number) {
 	os << BigInt::concat_number(number._chunks, number._is_negative, BigInt::BASE);
 	return os;
 }
 
-BigInt BigInt::sum(const BigInt& lhs, const BigInt& rhs)
-{
-	BigInt res("0");
+BigInt BigInt::sum(const BigInt& lhs, const BigInt& rhs) {
+	BigInt res;
 
 	if (lhs._is_negative == rhs._is_negative) {
 		std::vector<uint32_t> result;
@@ -154,41 +130,33 @@ BigInt BigInt::sum(const BigInt& lhs, const BigInt& rhs)
 	}
 	else
 	{
-		size_t option = BigInt::compare_abs_bigints(lhs, rhs);
+		int check = BigInt::abs_cmp(lhs, rhs);
 
-		switch (option)
-		{
-		case 1:
+		if (check > 0) {
 			res._is_negative = lhs._is_negative;
 			res._chunks = BigInt::sub_chunks(lhs, rhs)._chunks;
-			break;
-		case 2:
+		}
+		else if (check == 0) {
 			return res;
-			break;
-		case 3:
+		}
+		else {
 			res._is_negative = rhs._is_negative;
 			res._chunks = BigInt::sub_chunks(rhs, lhs)._chunks;
-			break;
-		default:
-			break;
 		}
 	}
 
 	return res;
 }
 
-// a - b = (-b) + a
-BigInt BigInt::sub(const BigInt& lhs, const BigInt& rhs)
-{
-	BigInt tmp("0");
+BigInt BigInt::sub(const BigInt& lhs, const BigInt& rhs) {
+	BigInt tmp;
 	tmp._chunks = rhs._chunks;
 	tmp._is_negative = !rhs._is_negative;
 	return BigInt::sum(lhs, tmp);
 }
 
-BigInt BigInt::simple_mul(const BigInt& lhs, const BigInt& rhs)
-{
-	BigInt result("0");
+BigInt BigInt::simple_mul(const BigInt& lhs, const BigInt& rhs) {
+	BigInt result;
 
 	size_t result_size = lhs._chunks.size() + rhs._chunks.size();
 	std::vector<uint32_t> res_chunks(result_size, 0);
@@ -207,102 +175,114 @@ BigInt BigInt::simple_mul(const BigInt& lhs, const BigInt& rhs)
 		res_chunks[i + rhs._chunks.size()] += static_cast<uint32_t>(carry);
 	}
 
-	while (res_chunks.size() > 1 && res_chunks.back() == 0) {
+	while (res_chunks.size() > 1 && res_chunks.back() == 0)
 		res_chunks.pop_back();
-	}
 
 	result._chunks = res_chunks;
 	result._is_negative = lhs._is_negative ^ rhs._is_negative;
 	return result;
 }
 
-BigInt BigInt::karatsuba_mul(const BigInt& lhs, const BigInt& rhs)
-{
-	// TODO: умножение больших чисел методом Карацубы
-	throw std::logic_error("Not implemented");
+BigInt BigInt::karatsuba_mul(const BigInt& lhs, const BigInt& rhs) {
+	size_t split_length = (lhs._chunks.size() + lhs._chunks.size()) / 4;
+	std::vector<uint32_t> lhs_chunks0(lhs._chunks.begin(), lhs._chunks.begin() + split_length);
+	std::vector<uint32_t> lhs_chunks1(lhs._chunks.begin() + split_length, lhs._chunks.end());
+	std::vector<uint32_t> rhs_chunks0(rhs._chunks.begin(), rhs._chunks.begin() + split_length);
+	std::vector<uint32_t> rhs_chunks1(rhs._chunks.begin() + split_length, rhs._chunks.end());
+	BigInt lhs0(lhs_chunks0);
+	BigInt lhs1(lhs_chunks1);
+	BigInt rhs0(rhs_chunks0);
+	BigInt rhs1(rhs_chunks1);
+	
+	BigInt r2 = (lhs1._chunks.size() == 1 || rhs1._chunks.size() == 1) ? BigInt::simple_mul(lhs1, rhs1) : BigInt::karatsuba_mul(lhs1, rhs1);
+	BigInt r0 = (lhs0._chunks.size() == 1 || rhs0._chunks.size() == 1) ? BigInt::simple_mul(lhs0, rhs0) : BigInt::karatsuba_mul(lhs0, rhs0);
+	BigInt lhs01 = lhs0 + lhs1;
+	BigInt rhs01 = rhs0 + rhs1;
+	BigInt tmp = (lhs01._chunks.size() == 1 || rhs01._chunks.size() == 1) ? BigInt::simple_mul(lhs01, rhs01) : BigInt::karatsuba_mul(lhs01, rhs01);
+	BigInt r1 = tmp - r2 - r0;
+
+	std::vector<uint32_t> res_chunks2;
+	for (size_t i = 0; i < 2 * split_length; i++)
+		res_chunks2.push_back(0);
+	for (size_t i = 0; i < r2._chunks.size(); i++)
+		res_chunks2.push_back(r2._chunks[i]);
+
+	std::vector<uint32_t> res_chunks1;
+	for (size_t i = 0; i < split_length; i++)
+		res_chunks1.push_back(0);
+	for (size_t i = 0; i < r1._chunks.size(); i++)
+		res_chunks1.push_back(r1._chunks[i]);
+
+	std::vector<uint32_t> res_chunks0 = r0._chunks;
+
+	BigInt res2(res_chunks2);
+	BigInt res1(res_chunks1);
+	BigInt res0(res_chunks0);
+	BigInt result = res2 + res1 + res0;
+	result._is_negative = lhs._is_negative ^ rhs._is_negative;
+	return result;
 }
 
-std::pair<BigInt, BigInt> BigInt::div(const BigInt& lhs, const BigInt& rhs)
-{
+std::pair<BigInt, BigInt> BigInt::div(const BigInt& lhs, const BigInt& rhs) {
 	// TODO: деление нацело больших чисел (возвращает частное и остаток)
 	throw std::logic_error("Not implemented");
 }
 
-BigInt BigInt::mod(const BigInt& lhs, const BigInt& rhs)
-{
+BigInt BigInt::mod(const BigInt& lhs, const BigInt& rhs) {
 	// TODO: остаток от деления больших чисел
 	throw std::logic_error("Not implemented");
 }
 
-std::tuple<BigInt, BigInt, BigInt> BigInt::extended_gcd(const BigInt& lhs, const BigInt& rhs)
-{
+std::tuple<BigInt, BigInt, BigInt> BigInt::extended_gcd(const BigInt& lhs, const BigInt& rhs) {
 	// TODO: поиск НОД расширенным алгоритмом Евклида
 	throw std::logic_error("Not implemented");
 }
 
-BigInt BigInt::gcd(const BigInt& lhs, const BigInt& rhs)
-{
+BigInt BigInt::gcd(const BigInt& lhs, const BigInt& rhs) {
 	// TODO: поиск НОД алгоритмом Евклида (сначала реализовать расширенный алгоритм Евклида)
 	throw std::logic_error("Not implemented");
 }
 
-BigInt BigInt::left_shift(const BigInt& number, int shift)
-{
+BigInt BigInt::left_shift(const BigInt& number, int shift) {
 	// TODO: левый сдвиг большого числа на заданное число разрядов (деление на степень 2)
 	throw std::logic_error("Not implemented");
 }
 
-BigInt BigInt::right_shift(const BigInt& number, int shift)
-{
+BigInt BigInt::right_shift(const BigInt& number, int shift) {
 	// TODO: правый сдвиг большого числа на заданное число разрядов (умножение на степень 2)
 	throw std::logic_error("Not implemented");
 }
 
-BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module)
-{
+BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module) {
 	// TODO: умножение больших чисел методом Монтгомери по модулю
 	throw std::logic_error("Not implemented");
 }
 
-BigInt BigInt::pow(const BigInt& number, const BigInt& degree, int base)
-{
+BigInt BigInt::pow(const BigInt& number, const BigInt& degree, int base) {
 	// TODO: возведение в степень для больших чисел бинарным (default) и q-арным алгоритмом
 	throw std::logic_error("Not implemented");
 }
 
-BigInt BigInt::montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt& module, int base)
-{
+BigInt BigInt::montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt& module, int base) {
 	// TODO: возведение в степень по модулю для больших чисел методом Монтгомери с использованием бинарного/q-арного алгоритма
 	throw std::logic_error("Not implemented");
 }
 
-// Compare abs 2 numbers
-// return 1 when number1 > number2, 2 when number1 = number2 and 3 when number1 < number2
-size_t BigInt::compare_abs_bigints(const BigInt& number1, const BigInt& number2)
-{
+// abs comparator for 2 numbers
+int BigInt::abs_cmp(const BigInt& number1, const BigInt& number2) {
 	if (number1._chunks.size() > number2._chunks.size())
-	{
 		return 1;
-	}
 	else if (number1._chunks.size() <  number2._chunks.size())
-	{
-		return 3;
-	}
-	else
-	{
-		for (size_t i = number1._chunks.size() - 1; i > 0; --i)
-		{
+		return -1;
+	else {
+		for (size_t i = number1._chunks.size() - 1; i > 0; --i) {
 			if (number1._chunks[i] > number2._chunks[i])
-			{
 				return 1;
-			}
 			else if (number1._chunks[i] < number2._chunks[i])
-			{
-				return 3;
-			}
+				return -1;
 		}
 	}
-	return 2;
+	return 0;
 }
 
 // this method only used when abs(lhs) > abs(rhs)
@@ -340,8 +320,7 @@ BigInt BigInt::sub_chunks(const BigInt& lhs, const BigInt& rhs) {
 }
 
 
-BigInt& BigInt::operator=(const BigInt& other)
-{
+BigInt& BigInt::operator =(const BigInt& other) {
 	if (this != &other) { 
 		this->_is_negative = other._is_negative;
 		this->_chunks = other._chunks;
@@ -349,29 +328,62 @@ BigInt& BigInt::operator=(const BigInt& other)
 	return *this;
 }
 
-BigInt BigInt::operator+(const BigInt& other) const 
-{
+BigInt BigInt::operator +(const BigInt& other) const  {
 	return BigInt::sum(*this, other);
 }
 
-BigInt BigInt::operator-(const BigInt& other) const
-{
+BigInt BigInt::operator -(const BigInt& other) const {
 	return BigInt::sub(*this, other);
 }
 
-BigInt BigInt::operator-() const
-{
+BigInt BigInt::operator -() const {
 	BigInt result = *this;
 	result._is_negative = !result._is_negative;
 	return result;
 }
 
-BigInt BigInt::operator*(const BigInt& other) const
-{
-	return BigInt::simple_mul(*this, other);
+BigInt BigInt::operator *(const BigInt& other) const {
+	return BigInt::karatsuba_mul(*this, other);
 }
 
-BigInt BigInt::operator%(const BigInt& other) const
-{
+BigInt BigInt::operator %(const BigInt& other) const {
 	return BigInt::mod(*this, other);
+}
+
+bool BigInt::operator ==(const BigInt& other) const {
+	BigInt zero;
+	if (_chunks == zero._chunks && other._chunks == zero._chunks)
+		return true;
+	return BigInt::abs_cmp(*this, other) == 0 && _is_negative == other._is_negative;
+}
+
+bool BigInt::operator !=(const BigInt& other) const {
+	return !(*this == other);
+}
+
+bool BigInt::operator >(const BigInt& other) const {
+	if (*this == other)
+		return false;
+
+	if (_is_negative && !other._is_negative)
+		return false;
+	if (!_is_negative && other._is_negative)
+		return true;
+
+	int check = BigInt::abs_cmp(*this, other) > 0;
+	if (check < 0 && _is_negative || check > 0 && !_is_negative)
+		return true;
+	return false;
+}
+
+bool BigInt::operator <(const BigInt& other) const {
+	return other > *this;
+}
+
+bool BigInt::operator >=(const BigInt& other) const {
+	return *this == other || *this > other;
+}
+
+bool BigInt::operator <=(const BigInt& other) const {
+	return *this == other || *this < other;
 }
