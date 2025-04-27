@@ -15,8 +15,8 @@ private:
 public:
 	static const uint64_t BASE = (uint64_t)UINT32_MAX + 1;
 
-	BigInt(std::string number = "0");
-	BigInt(uint32_t chunk, bool is_negative = false);
+	BigInt(std::string number);
+	BigInt(uint32_t number = 0, bool is_negative = false);
 	BigInt(std::vector<uint32_t> chunks, bool is_negative= false);
 
 	static std::vector<uint32_t> parse_number(std::string number, uint64_t base = (uint64_t)UINT32_MAX + 1);

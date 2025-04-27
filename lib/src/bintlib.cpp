@@ -175,9 +175,9 @@ BigInt::BigInt(std::string number) {
 	_chunks = parse_number(number, BASE);
 }
 
-BigInt::BigInt(uint32_t chunk, bool is_negative) {
+BigInt::BigInt(uint32_t number, bool is_negative) {
 	_is_negative = is_negative;
-	_chunks.push_back(chunk);
+	_chunks.push_back(number);
 }
 
 BigInt::BigInt(std::vector<uint32_t> chunks, bool is_negative) {
@@ -467,7 +467,7 @@ BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt
 }
 
 BigInt BigInt::pow(const BigInt& number, const BigInt& degree, int base) {
-	// TODO: возведение в степень для больших чисел бинарным (default) и q-арным алгоритмом привет от младшего бррата паши, димы
+	// TODO: возведение в степень для больших чисел бинарным (default) и q-арным алгоритмом
 	throw std::logic_error("Not implemented");
 }
 
