@@ -128,6 +128,23 @@ namespace test_bintlib
         }
     }
 
+    TEST_CASE("BigInt gcd", "[gcd]") {
+        BigInt number1 = BigInt("335690610347798156");
+        BigInt number2 = BigInt("79170610347800996959");
+
+        SECTION("Check 1: gcd") {
+            std::string result = BigInt::gcd(number1, number2).to_string();
+            REQUIRE(result == "6413");
+        }
+
+        SECTION("Check 2: gcd") {
+            number1 *= 2;
+            number2 *= 2;
+            std::string result = BigInt::gcd(number1, number2).to_string();
+            REQUIRE(result == "12826");
+        }
+    }
+
     TEST_CASE("BigInt Shift", "[shift]") {
         BigInt number1 = BigInt("4556756767624525666272634167235675676762");
         BigInt number2 = BigInt("-12345678901234567890");

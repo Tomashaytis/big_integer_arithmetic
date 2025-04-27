@@ -425,8 +425,34 @@ std::tuple<BigInt, BigInt, BigInt> BigInt::extended_gcd(const BigInt& lhs, const
 }
 
 BigInt BigInt::gcd(const BigInt& lhs, const BigInt& rhs) {
-	// TODO: поиск НОД алгоритмом Евклида (сначала реализовать расширенный алгоритм Евклида)
-	throw std::logic_error("Not implemented");
+	BigInt a = BigInt::abs(lhs);
+	BigInt b = BigInt::abs(rhs);
+
+	if (a == BigInt("0")) return b;
+	if (b == BigInt("0")) return a;
+
+	uint32_t shift = 0;
+
+	while ((a._chunks[0] & 1) == 0 && (b._chunks[0] & 1) == 0) {
+		a = a >> 1;
+		b = b >> 1;
+		shift++;
+	}
+
+	while ((a._chunks[0] & 1) == 0) {
+		a = a >> 1;
+	}
+
+	while (b != BigInt("0")) {
+		while ((b._chunks[0] & 1) == 0) {
+			b = b >> 1;
+		}
+		if (a > b)
+			std::swap(a, b);
+		b = b - a;
+	}
+
+	return a << shift;
 }
 
 BigInt BigInt::left_shift(const BigInt& number, uint32_t shift) {
