@@ -155,6 +155,28 @@ std::string BigInt::to_string() const {
 	return BigInt::concat_number(_chunks, _is_negative);
 }
 
+double BigInt::to_double() const {
+	uint64_t sign = _is_negative ? (1ULL << 63) : 0;
+
+	uint64_t mantissa = 0;
+	size_t shift = BigInt::leading_zeros(_chunks.back());
+	BigInt tmp = *this << shift;
+	if (_chunks.size() > 1) {
+		uint32_t high_bits = tmp._chunks.back() & 0x7FFFFFFF;
+		mantissa = (uint64_t)high_bits << 21;
+		mantissa = mantissa | (uint64_t)tmp._chunks[tmp._chunks.size() - 2] >> 11;
+	}
+	else {
+		mantissa = ((uint64_t)tmp._chunks.back() & 0x7FFFFFFF) << 21;
+	}
+
+	uint64_t exponent = 1023 + 32 * (_chunks.size() - 1) + 31 - shift;
+	exponent <<= 52;
+
+	uint64_t result = sign | exponent | mantissa;
+	return *reinterpret_cast<const double*>(&result);
+}
+
 BigInt BigInt::abs(const BigInt& number) {
 	BigInt result = number;
 	result._is_negative = false;
