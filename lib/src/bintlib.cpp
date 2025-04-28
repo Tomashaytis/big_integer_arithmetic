@@ -621,13 +621,9 @@ BigInt BigInt::right_shift(const BigInt& number, uint32_t shift) {
 	return BigInt(chunks2, number._is_negative);
 }
 
-BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module) {
-	BigInt one = 1;
-	uint32_t n = module.bit_length();
-	BigInt R = one << n;
-
+BigInt BigInt::montgomery(const BigInt& rhs, const BigInt& lhs,const BigInt& module, const BigInt& R) {
 	BigInt m_prime = BigInt::mod_inverse(module, R);
-	m_prime = R - m_prime; 
+	m_prime = R - m_prime;
 
 	BigInt x = rhs * lhs;
 	BigInt m = (x * m_prime) % R;
@@ -639,19 +635,19 @@ BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt
 	return t;
 }
 
-BigInt BigInt::montgomery_mul_module(const BigInt& rhs, const BigInt& lhs, const BigInt& module) { 
+BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module) { 
 	BigInt one = 1;
 	uint32_t n = module.bit_length();
 	BigInt R = one << n;
 
 	BigInt m_prime = BigInt::mod_inverse(module, R);
-	m_prime = R - m_prime; 
+	m_prime = R - m_prime;
 
 	BigInt Ra = (lhs * R) % module;
 	BigInt Rb = (rhs * R) % module;
-	BigInt Rc = BigInt::montgomery_mul(Ra, Rb, module);
+	BigInt Rc = BigInt::montgomery(Ra, Rb, module, R);
 
-	return BigInt::montgomery_mul(Rc, one, module);
+	return BigInt::montgomery(Rc, one, module, R);
 }
 
 BigInt BigInt::binary_pow(const BigInt& number, const BigInt& degree) {
