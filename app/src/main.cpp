@@ -3,10 +3,8 @@
 using namespace std;
 
 int main() {
-	BigInt number1 = BigInt("98765432101234567890123456789");
-	BigInt number2 = BigInt("6413641364136413641364136413");
-	BigInt module = BigInt("20252025202520252025202520252025");
-	std::cout << BigInt::montgomery_mul_module(number1, number2, module) << endl;
-	std::cout << (number1 * number2) % module << endl;
+	BigInt number1 = BigInt("2");
+	BigInt number2 = BigInt("20");
+	std::cout << BigInt::pow(number1, number2, 8) << endl;
 	return 0;
 }

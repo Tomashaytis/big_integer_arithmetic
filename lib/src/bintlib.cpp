@@ -608,8 +608,8 @@ BigInt BigInt::right_shift(const BigInt& number, uint32_t shift) {
 }
 
 BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module) {
-	BigInt one("1");
-	uint32_t n = module._chunks.size(); 
+	BigInt one(1);
+	uint32_t n = (uint32_t)module._chunks.size();
 	BigInt R = one;
 	R <<= 32 * n; 
 	
@@ -628,8 +628,8 @@ BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt
 }
 
 BigInt BigInt::montgomery_mul_module(const BigInt& rhs, const BigInt& lhs, const BigInt& module) { 
-	BigInt one("1");
-	uint32_t n = module._chunks.size();
+	BigInt one(1);
+	uint32_t n = (uint32_t)module._chunks.size();
 	BigInt R = one;
 	R <<= 32 * n;
 
@@ -644,10 +644,11 @@ BigInt BigInt::montgomery_mul_module(const BigInt& rhs, const BigInt& lhs, const
 	return BigInt::montgomery_mul(Rc, one, module);
 }
 
-
 BigInt BigInt::binary_pow(const BigInt& number, const BigInt& degree) {
 	if (degree == 0)
 		return BigInt(1);
+	if (degree == 1)
+		return number;
 
 	std::vector<bool> degree_bits;
 	for (auto chunk : degree._chunks) {
@@ -670,8 +671,17 @@ BigInt BigInt::binary_pow(const BigInt& number, const BigInt& degree) {
 }
 
 BigInt BigInt::pow(const BigInt& number, const BigInt& degree, uint32_t base) {
-	if (base > 0 && (base & (base - 1)) != 0)
-		throw std::invalid_argument("The base is not a power of 2");
+	if (base > 0 && (base & (base - 1)) != 0 || base == 0)
+		throw std::invalid_argument("Base is not a power of 2");
+	if (base == 1)
+		throw std::invalid_argument("Base cannot be equal to 1");
+
+	if (degree == 0)
+		return BigInt(1);
+	if (degree == 1)
+		return number;
+
+	int bit_depth = (size_t)(32 - BigInt::leading_zeros(base)) - 1;
 
 	std::vector<bool> degree_bits;
 	for (auto chunk : degree._chunks) {
@@ -683,12 +693,33 @@ BigInt BigInt::pow(const BigInt& number, const BigInt& degree, uint32_t base) {
 		degree_bits.pop_back();
 	}
 
-	BigInt acc = number;
-	for (int i = (int)degree_bits.size() - 2; i >= 0; i--) {
-		acc = BigInt::karatsuba_square(acc);
-		if (degree_bits[i] == 1)
-			acc *= number;
+	while (degree_bits.size() % bit_depth != 0) {
+		degree_bits.push_back(false);
 	}
+
+	std::vector<BigInt> factors;
+
+	BigInt acc(1);
+	for (size_t i = 0; i < base; i++) {
+		factors.push_back(acc);
+		acc *= number;
+	}
+
+	acc = BigInt(1);
+	for (int i = (int)degree_bits.size() - 1; i >= 0; i -= bit_depth) {		
+		for (size_t i = 0; i < bit_depth; i++) {
+			acc = BigInt::karatsuba_square(acc);
+		}
+
+		uint32_t factor_index = 0;
+		for (size_t j = 0; j < bit_depth; j++) {
+			factor_index |= (uint32_t)degree_bits[i - j] << (bit_depth - j - 1);
+		}
+
+		acc *= factors[factor_index];
+	}
+
+	return acc;
 }
 
 BigInt BigInt::montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt& module, uint32_t base) {

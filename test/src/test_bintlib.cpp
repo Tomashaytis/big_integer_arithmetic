@@ -159,7 +159,7 @@ namespace test_bintlib
         }
     }
 
-    TEST_CASE("BigInt gcd", "[gcd]") {
+    TEST_CASE("BigInt GCD", "[gcd]") {
         BigInt number1 = BigInt("335690610347798156");
         BigInt number2 = BigInt("79170610347800996959");
 
@@ -176,7 +176,7 @@ namespace test_bintlib
         }
     }
 
-    TEST_CASE("BigInt extended_gcd", "[extended_gcd]") {
+    TEST_CASE("BigInt Extended GCD", "[extended_gcd]") {
         BigInt number1 = BigInt("1234567890");
         BigInt number2 = BigInt("98765421");
         BigInt number3 = BigInt("2925097560");
@@ -197,7 +197,7 @@ namespace test_bintlib
         }
     }
 
-    TEST_CASE("BigInt mod_inverse", "[mod_inverse]") {
+    TEST_CASE("BigInt Mod Inverse", "[mod_inverse]") {
         BigInt number1 = BigInt("444896441");
         BigInt number2 = BigInt("47146817");
 
@@ -250,7 +250,30 @@ namespace test_bintlib
         }
     }
 
-    TEST_CASE("BigInt montgomery_mul", "[montgomery_mul]") {
+    TEST_CASE("BigInt Power", "[power]") {
+        BigInt number1 = BigInt("-12345678901234567890");
+        BigInt number2 = BigInt("3594647268");
+        BigInt number3 = BigInt("5");
+        BigInt number4 = BigInt("12");
+        BigInt one(1);
+
+        SECTION("Check 1: pow") {
+            std::string result = BigInt::pow(number1, number3, 4).to_string();
+            REQUIRE(result == "-286797186173370403767041767776920429666954333495933335798264659838306817363852838672048294900000");
+        }
+
+        SECTION("Check 2: pow") {
+            std::string result = BigInt::pow(number2, number4, 8).to_string();
+            REQUIRE(result == "4654525023350199709144256884159024567650231897595879211673181237453860263392849502712662291036849775675662376370176");
+        }
+
+        SECTION("Check 3: pow") {
+            std::string result = BigInt::pow(number1, one, 16).to_string();
+            REQUIRE(result == "-12345678901234567890");
+        }
+    }
+
+    TEST_CASE("BigInt Montgomery Multiplication", "[montgomery_multiplication]") {
         BigInt number1 = BigInt("98765432101234567890123456789");
         BigInt number2 = BigInt("12345678909876543210987654321");
         BigInt number3 = BigInt("6413641364136413641364136413");
