@@ -98,8 +98,8 @@ BigInt BigInt::sub_chunks(const BigInt& lhs, const BigInt& rhs) {
 	int64_t borrow = 0;
 
 	for (size_t i = 0; i < lhs._chunks.size(); ++i) {
-		int64_t a = static_cast<int64_t>(lhs._chunks[i]);
-		int64_t b = (i < rhs._chunks.size()) ? static_cast<int64_t>(rhs._chunks[i]) : 0;
+		int64_t a = (int64_t)lhs._chunks[i];
+		int64_t b = (i < rhs._chunks.size()) ? (int64_t)rhs._chunks[i] : 0;
 
 		int64_t diff = a - b - borrow;
 
@@ -111,7 +111,7 @@ BigInt BigInt::sub_chunks(const BigInt& lhs, const BigInt& rhs) {
 			borrow = 0;
 		}
 
-		result.push_back(static_cast<uint32_t>(diff));
+		result.push_back((uint32_t)diff);
 	}
 
 	while (result.size() > 1 && result.back() == 0) {
@@ -156,6 +156,18 @@ uint32_t BigInt::estimate_quotient(const BigInt& dividend, const BigInt& divider
 	uint32_t q = (c > UINT32_MAX) ? UINT32_MAX : (uint32_t)c;
 
 	return q + 2;
+}
+
+uint32_t BigInt::bit_length() const {
+	BigInt zero;
+
+	if (*this == zero)
+		return 0;
+
+	uint32_t total_bits = (uint32_t)(_chunks.size() - 1) * 32;
+	uint32_t top_chunk = _chunks.back();
+	total_bits += 32 - BigInt::leading_zeros(top_chunk);
+	return total_bits;
 }
 
 std::string BigInt::to_string() const {
@@ -233,16 +245,16 @@ BigInt BigInt::sum(const BigInt& lhs, const BigInt& rhs) {
 		uint64_t carry = 0;
 
 		for (size_t i = 0; i < max_size; ++i) {
-			uint64_t a = (i < lhs._chunks.size()) ? static_cast<uint64_t>(lhs._chunks[i]) : 0;
-			uint64_t b = (i < rhs._chunks.size()) ? static_cast<uint64_t>(rhs._chunks[i]) : 0;
+			uint64_t a = (i < lhs._chunks.size()) ? (uint64_t)lhs._chunks[i] : 0;
+			uint64_t b = (i < rhs._chunks.size()) ? (uint64_t)rhs._chunks[i] : 0;
 
 			uint64_t sum = a + b + carry;
-			result.push_back(static_cast<uint32_t>(sum % BASE));
+			result.push_back((uint32_t)(sum % BASE));
 			carry = sum / BASE;
 		}
 
 		if (carry > 0) {
-			result.push_back(static_cast<uint32_t>(carry));
+			result.push_back((uint32_t)carry);
 		}
 		res._chunks = result;
 		res._is_negative = lhs._is_negative;
@@ -284,14 +296,14 @@ BigInt BigInt::simple_mul(const BigInt& lhs, const BigInt& rhs) {
 		uint64_t carry = 0;
 
 		for (size_t j = 0; j < rhs._chunks.size(); ++j) {
-			uint64_t mul = static_cast<uint64_t>(lhs._chunks[i]) * rhs._chunks[j];
-			uint64_t sum = static_cast<uint64_t>(res_chunks[i + j]) + mul + carry;
+			uint64_t mul = (uint64_t)(lhs._chunks[i]) * rhs._chunks[j];
+			uint64_t sum = (uint64_t)(res_chunks[i + j]) + mul + carry;
 
-			res_chunks[i + j] = static_cast<uint32_t>(sum % BASE);
+			res_chunks[i + j] = (uint32_t)(sum % BASE);
 			carry = sum / BASE;
 		}
 
-		res_chunks[i + rhs._chunks.size()] += static_cast<uint32_t>(carry);
+		res_chunks[i + rhs._chunks.size()] += (uint32_t)carry;
 	}
 
 	while (res_chunks.size() > 1 && res_chunks.back() == 0)
@@ -609,15 +621,9 @@ BigInt BigInt::right_shift(const BigInt& number, uint32_t shift) {
 	return BigInt(chunks2, number._is_negative);
 }
 
-BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module) {
-	BigInt one = 1;
-	uint32_t n = (uint32_t)module._chunks.size();
-	BigInt R = one;
-	R <<= 32 * n; 
-	
-	BigInt R_mod = R;
-	BigInt m_prime = BigInt::mod_inverse(module, R_mod);
-	m_prime = R_mod - m_prime; 
+BigInt BigInt::montgomery(const BigInt& rhs, const BigInt& lhs,const BigInt& module, const BigInt& R) {
+	BigInt m_prime = BigInt::mod_inverse(module, R);
+	m_prime = R - m_prime;
 
 	BigInt x = rhs * lhs;
 	BigInt m = (x * m_prime) % R;
@@ -629,21 +635,19 @@ BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt
 	return t;
 }
 
-BigInt BigInt::montgomery_mul_module(const BigInt& rhs, const BigInt& lhs, const BigInt& module) { 
+BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module) { 
 	BigInt one = 1;
-	uint32_t n = (uint32_t)module._chunks.size();
-	BigInt R = one;
-	R <<= 32 * n;
+	uint32_t n = module.bit_length();
+	BigInt R = one << n;
 
-	BigInt R_mod = R;
-	BigInt m_prime = BigInt::mod_inverse(module, R_mod);
-	m_prime = R_mod - m_prime; 
+	BigInt m_prime = BigInt::mod_inverse(module, R);
+	m_prime = R - m_prime;
 
 	BigInt Ra = (lhs * R) % module;
 	BigInt Rb = (rhs * R) % module;
-	BigInt Rc = BigInt::montgomery_mul(Ra, Rb, module);
+	BigInt Rc = BigInt::montgomery(Ra, Rb, module, R);
 
-	return BigInt::montgomery_mul(Rc, one, module);
+	return BigInt::montgomery(Rc, one, module, R);
 }
 
 BigInt BigInt::binary_pow(const BigInt& number, const BigInt& degree) {
