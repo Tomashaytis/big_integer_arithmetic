@@ -12,7 +12,7 @@ Based on C++.
 - [x] Karatsuba squaring
 - [x] Integer division
 - [x] Remainder of division 
-- [x] Shifting
+- [x] Left and right shifts
 - [x] GCD by Euclidian algorithm
 - [x] GCD by extended Euclidian algorithm
 - [x] Mod inverse
