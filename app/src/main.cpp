@@ -3,9 +3,8 @@
 using namespace std;
 
 int main() {
-	BigInt number1 = BigInt("12312312312312321");
-	BigInt number2 = BigInt("12312312312312320");
-	auto [q, r] = BigInt::div(number1, number2);
-	std::cout << BigInt::karatsuba_square(number1) << endl;
+	BigInt number1 = BigInt("12345678901234567890");
+	BigInt number2 = BigInt("5");
+	std::cout << BigInt::binary_pow(number1, number2) << endl;
 	return 0;
 }

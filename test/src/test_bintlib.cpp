@@ -123,7 +123,7 @@ namespace test_bintlib
             REQUIRE(result.second.to_string() == "1512927180252052652");
         }
 
-        SECTION("Check 1: div") {
+        SECTION("Check 2: div") {
             number2 = -number2;
             auto result = BigInt::div(number1, number2);
             REQUIRE(result.first.to_string() == "-369097301499462292799");
@@ -152,7 +152,7 @@ namespace test_bintlib
             REQUIRE(result == "1512927180252052652");
         }
 
-        SECTION("Check 1: mod") {
+        SECTION("Check 2: mod") {
             number1 = -number1;
             std::string result = BigInt::mod(number1, number2).to_string();
             REQUIRE(result== "10832751720982515238");
@@ -221,9 +221,32 @@ namespace test_bintlib
             REQUIRE(result == "3594647268");
         }
 
-        SECTION("Check 1: left_shift") {
+        SECTION("Check 2: left_shift") {
             std::string result = BigInt::left_shift(number2, 100).to_string();
             REQUIRE(result == "-15650007269374987633198475872814597484617284976640");
+        }
+    }
+
+    TEST_CASE("BigInt Binary Power", "[binary_power]") {
+        BigInt number1 = BigInt("-12345678901234567890");
+        BigInt number2 = BigInt("3594647268");
+        BigInt number3 = BigInt("5");
+        BigInt number4 = BigInt("12");
+        BigInt zero;
+
+        SECTION("Check 1: binary_pow") {
+            std::string result = BigInt::binary_pow(number1, number3).to_string();
+            REQUIRE(result == "-286797186173370403767041767776920429666954333495933335798264659838306817363852838672048294900000");
+        }
+
+        SECTION("Check 2: binary_pow") {
+            std::string result = BigInt::binary_pow(number2, number4).to_string();
+            REQUIRE(result == "4654525023350199709144256884159024567650231897595879211673181237453860263392849502712662291036849775675662376370176");
+        }
+
+        SECTION("Check 3: binary_pow") {
+            std::string result = BigInt::binary_pow(number1, zero).to_string();
+            REQUIRE(result == "1");
         }
     }
 
@@ -236,17 +259,17 @@ namespace test_bintlib
             REQUIRE(number2 == number2);
         }
 
-        SECTION("Check 1: not equal") {
+        SECTION("Check 2: not equal") {
             REQUIRE(number1 != number2);
             REQUIRE(number2 != number1);
         }
 
-        SECTION("Check 1: large/less") {
+        SECTION("Check 3: large/less") {
             REQUIRE(number1 < number2);
             REQUIRE(number2 > number1);
         }
 
-        SECTION("Check 1: large equal/less equal") {
+        SECTION("Check 4: large equal/less equal") {
             REQUIRE(number1 <= number2);
             REQUIRE(number2 >= number1);
             REQUIRE(number1 >= number1);

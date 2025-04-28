@@ -307,10 +307,16 @@ BigInt BigInt::simple_mul(const BigInt& lhs, const BigInt& rhs) {
 
 BigInt BigInt::karatsuba_mul(const BigInt& lhs, const BigInt& rhs) {
 	size_t split_length = (lhs._chunks.size() + lhs._chunks.size()) / 4;
-	std::vector<uint32_t> lhs_chunks0(lhs._chunks.begin(), lhs._chunks.begin() + split_length);
-	std::vector<uint32_t> lhs_chunks1(lhs._chunks.begin() + split_length, lhs._chunks.end());
-	std::vector<uint32_t> rhs_chunks0(rhs._chunks.begin(), rhs._chunks.begin() + split_length);
-	std::vector<uint32_t> rhs_chunks1(rhs._chunks.begin() + split_length, rhs._chunks.end());
+
+	std::vector<uint32_t> lhs_chunks0(lhs._chunks.begin(), (split_length <= lhs._chunks.size()) ? lhs._chunks.begin() + split_length : lhs._chunks.end());
+	std::vector<uint32_t> lhs_chunks1;
+	if (split_length < lhs._chunks.size())
+		lhs_chunks1 = std::vector<uint32_t>(lhs._chunks.begin() + split_length, lhs._chunks.end());
+	std::vector<uint32_t> rhs_chunks0(rhs._chunks.begin(), (split_length <= rhs._chunks.size()) ? rhs._chunks.begin() + split_length : rhs._chunks.end());
+	std::vector<uint32_t> rhs_chunks1;
+	if (split_length < rhs._chunks.size())
+		rhs_chunks1 = std::vector<uint32_t>(rhs._chunks.begin() + split_length, rhs._chunks.end());
+
 	BigInt lhs0(lhs_chunks0);
 	BigInt lhs1(lhs_chunks1);
 	BigInt rhs0(rhs_chunks0);
@@ -352,8 +358,12 @@ BigInt BigInt::karatsuba_mul(const BigInt& lhs, const BigInt& rhs) {
 
 BigInt BigInt::karatsuba_square(const BigInt& number) {
 	size_t split_length = number._chunks.size() / 2;
-	std::vector<uint32_t> number_chunks0(number._chunks.begin(), number._chunks.begin() + split_length);
-	std::vector<uint32_t> number_chunks1(number._chunks.begin() + split_length, number._chunks.end());
+
+	std::vector<uint32_t> number_chunks0(number._chunks.begin(), (split_length <= number._chunks.size()) ? number._chunks.begin() + split_length : number._chunks.end());
+	std::vector<uint32_t> number_chunks1;
+	if (split_length < number._chunks.size())
+		number_chunks1 = std::vector<uint32_t>(number._chunks.begin() + split_length, number._chunks.end());
+
 	BigInt number0(number_chunks0);
 	BigInt number1(number_chunks1);
 
@@ -596,6 +606,30 @@ BigInt BigInt::right_shift(const BigInt& number, uint32_t shift) {
 BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module) {
 	// TODO: умножение больших чисел методом Монтгомери по модулю
 	throw std::logic_error("Not implemented");
+}
+
+BigInt BigInt::binary_pow(const BigInt& number, const BigInt& degree) {
+	if (degree == 0)
+		return BigInt(1);
+
+	std::vector<bool> degree_bits;
+	for (auto chunk : degree._chunks) {
+		for (size_t i = 0; i < 32; i++)
+			degree_bits.push_back((chunk >> i) & 1);
+	}
+
+	while (degree_bits.back() == 0) {
+		degree_bits.pop_back();
+	}
+
+	BigInt acc = number;
+	for (int i = (int)degree_bits.size() - 2; i >= 0; i--) {
+		acc = BigInt::karatsuba_square(acc);
+		if (degree_bits[i] == 1)
+			acc *= number;
+	}
+
+	return acc;
 }
 
 BigInt BigInt::pow(const BigInt& number, const BigInt& degree, int base) {
