@@ -14,6 +14,7 @@ Based on C++.
 - [x] Shifting
 - [x] GCD by Euclidian algorithm
 - [x] GCD by extended Euclidian algorithm
+- [x] Mod inverse
 - [ ] Montgomery multiplication by module
 - [ ] Binary and q-ary raising to a power
 - [ ] Montgomery raising to a power by module

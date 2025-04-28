@@ -184,6 +184,21 @@ namespace test_bintlib
         }
     }
 
+    TEST_CASE("BigInt mod_inverse", "[mod_inverse]") {
+        BigInt number1 = BigInt("444896441");
+        BigInt number2 = BigInt("47146817");
+
+        SECTION("Check 1: mod_inverse") {
+            std::string result = BigInt::mod_inverse(number1, number2).to_string();
+            REQUIRE(result == "45038276");
+        }
+
+        SECTION("Check 2: mod_inverse") {
+            std::string result = BigInt::mod_inverse(number2, number1).to_string();
+            REQUIRE(result == "19897046");
+        }
+    }
+
     TEST_CASE("BigInt Shift", "[shift]") {
         BigInt number1 = BigInt("4556756767624525666272634167235675676762");
         BigInt number2 = BigInt("-12345678901234567890");
