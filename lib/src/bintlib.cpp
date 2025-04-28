@@ -144,7 +144,10 @@ uint32_t BigInt::estimate_quotient(const BigInt dividend, const BigInt divider) 
 	uint32_t b = (dividend._chunks.size() > 1) ? dividend._chunks[dividend._chunks.size() - 2] : 0;
 	uint32_t e = divider._chunks.back();
 
-	uint64_t c = (uint64_t)a << 32;
+	uint64_t c = (uint64_t)a;
+	if (dividend._chunks.size() > 1)
+		c <<= 32;
+
 	uint64_t tmp = (c + b) / (uint64_t)e;
 	uint32_t q = (tmp > UINT32_MAX) ? UINT32_MAX : (uint32_t)tmp;
 
@@ -373,10 +376,15 @@ std::pair<BigInt, BigInt> BigInt::div(const BigInt& lhs, const BigInt& rhs) {
 		quotient_chunks.pop_back();
 	}
 
-	if (lhs._is_negative ^ rhs._is_negative)
-		remainder = remainder - BigInt::abs(rhs);
-
 	BigInt quotient(std::vector<uint32_t>(quotient_chunks.begin(), quotient_chunks.end()), lhs._is_negative ^ rhs._is_negative);
+
+	if (rhs._is_negative)
+		remainder = remainder - BigInt::abs(rhs);
+	else if (lhs._is_negative) {
+		remainder = -remainder + BigInt::abs(rhs);
+		quotient -= 1;
+	}
+
 	return std::pair<BigInt, BigInt>(quotient, remainder);
 }
  
@@ -413,8 +421,10 @@ BigInt BigInt::mod(const BigInt& lhs, const BigInt& rhs) {
 
 	remainder = remainder >> shift;
 
-	if (lhs._is_negative ^ rhs._is_negative)
+	if (rhs._is_negative)
 		remainder = remainder - BigInt::abs(rhs);
+	else if (lhs._is_negative)
+		remainder = -remainder + BigInt::abs(rhs);
 
 	return remainder;
 }

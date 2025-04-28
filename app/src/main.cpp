@@ -3,8 +3,8 @@
 using namespace std;
 
 int main() {
-	BigInt number1 = BigInt("12345678901234567890");
-	BigInt number2 = BigInt("12345");
-	std::cout << number1.to_double();
+	BigInt number1 = BigInt("-10");
+	BigInt number2 = BigInt("3");
+	std::cout << number1 % number2;
 	return 0;
 }

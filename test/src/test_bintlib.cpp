@@ -97,6 +97,10 @@ namespace test_bintlib
     TEST_CASE("BigInt Division", "[division]") {
         BigInt number1 = BigInt("4556756767624525666272634167235675676762");
         BigInt number2 = BigInt("12345678901234567890");
+        BigInt number3 = BigInt("6");
+        BigInt number4 = BigInt("5");
+        BigInt number5 = BigInt("-10");
+        BigInt number6 = BigInt("3");
 
         SECTION("Check 1: div") {
             auto result = BigInt::div(number1, number2);
@@ -109,6 +113,18 @@ namespace test_bintlib
             auto result = BigInt::div(number1, number2);
             REQUIRE(result.first.to_string() == "-369097301499462292799");
             REQUIRE(result.second.to_string() == "-10832751720982515238");
+        }
+
+        SECTION("Check 3: div") {
+            auto result = BigInt::div(number3, number4);
+            REQUIRE(result.first.to_string() == "1");
+            REQUIRE(result.second.to_string() == "1");
+        }
+
+        SECTION("Check 4: div") {
+            auto result = BigInt::div(number5, number6);
+            REQUIRE(result.first.to_string() == "-4");
+            REQUIRE(result.second.to_string() == "2");
         }
     }
 
