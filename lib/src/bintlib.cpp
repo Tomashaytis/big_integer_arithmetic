@@ -446,6 +446,10 @@ std::pair<BigInt, BigInt> BigInt::div(const BigInt& lhs, const BigInt& rhs) {
 		quotient -= 1;
 	}
 
+	while (remainder._chunks.size() > 1 && remainder._chunks.back() == 0) {
+		remainder._chunks.pop_back();
+	}
+
 	return std::pair<BigInt, BigInt>(quotient, remainder);
 }
  
@@ -604,9 +608,42 @@ BigInt BigInt::right_shift(const BigInt& number, uint32_t shift) {
 }
 
 BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module) {
-	// TODO: умножение больших чисел методом Монтгомери по модулю
-	throw std::logic_error("Not implemented");
+	BigInt one("1");
+	uint32_t n = module._chunks.size(); 
+	BigInt R = one;
+	R <<= 32 * n; 
+	
+	BigInt R_mod = R;
+	BigInt m_prime = BigInt::mod_inverse(module, R_mod);
+	m_prime = R_mod - m_prime; 
+
+	BigInt x = rhs * lhs;
+	BigInt m = (x * m_prime) % R;
+	BigInt t = (x + m * module) / R;
+
+	if (t >= module)
+		t -= module;
+
+	return t;
 }
+
+BigInt BigInt::montgomery_mul_module(const BigInt& rhs, const BigInt& lhs, const BigInt& module) { 
+	BigInt one("1");
+	uint32_t n = module._chunks.size();
+	BigInt R = one;
+	R <<= 32 * n;
+
+	BigInt R_mod = R;
+	BigInt m_prime = BigInt::mod_inverse(module, R_mod);
+	m_prime = R_mod - m_prime; 
+
+	BigInt Ra = (lhs * R) % module;
+	BigInt Rb = (rhs * R) % module;
+	BigInt Rc = BigInt::montgomery_mul(Ra, Rb, module);
+
+	return BigInt::montgomery_mul(Rc, one, module);
+}
+
 
 BigInt BigInt::binary_pow(const BigInt& number, const BigInt& degree) {
 	if (degree == 0)
