@@ -378,9 +378,8 @@ std::pair<BigInt, BigInt> BigInt::div(const BigInt& lhs, const BigInt& rhs) {
 
 	BigInt quotient(std::vector<uint32_t>(quotient_chunks.begin(), quotient_chunks.end()), lhs._is_negative ^ rhs._is_negative);
 
-	if (rhs._is_negative)
-		remainder = remainder - BigInt::abs(rhs);
-	else if (lhs._is_negative) {
+
+	if (lhs._is_negative && remainder != zero) {
 		remainder = -remainder + BigInt::abs(rhs);
 		quotient -= 1;
 	}
@@ -421,11 +420,10 @@ BigInt BigInt::mod(const BigInt& lhs, const BigInt& rhs) {
 
 	remainder = remainder >> shift;
 
-	if (rhs._is_negative)
-		remainder = remainder - BigInt::abs(rhs);
-	else if (lhs._is_negative)
-		remainder = -remainder + BigInt::abs(rhs);
 
+	if (lhs._is_negative && remainder != 0)
+		remainder = -remainder + BigInt::abs(rhs);
+		
 	return remainder;
 }
 
