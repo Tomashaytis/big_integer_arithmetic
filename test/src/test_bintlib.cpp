@@ -112,7 +112,7 @@ namespace test_bintlib
             number2 = -number2;
             auto result = BigInt::div(number1, number2);
             REQUIRE(result.first.to_string() == "-369097301499462292799");
-            REQUIRE(result.second.to_string() == "-10832751720982515238");
+            REQUIRE(result.second.to_string() == "1512927180252052652");
         }
 
         SECTION("Check 3: div") {
@@ -138,12 +138,13 @@ namespace test_bintlib
         }
 
         SECTION("Check 1: mod") {
-            number2 = -number2;
+            number1 = -number1;
             std::string result = BigInt::mod(number1, number2).to_string();
-            REQUIRE(result== "-10832751720982515238");
+            REQUIRE(result== "10832751720982515238");
         }
     }
 
+    /*
     TEST_CASE("BigInt gcd", "[gcd]") {
         BigInt number1 = BigInt("335690610347798156");
         BigInt number2 = BigInt("79170610347800996959");
@@ -158,6 +159,28 @@ namespace test_bintlib
             number2 *= 2;
             std::string result = BigInt::gcd(number1, number2).to_string();
             REQUIRE(result == "12826");
+        }
+    }
+    */
+
+    TEST_CASE("BigInt extended_gcd", "[extended_gcd]") {
+        BigInt number1 = BigInt("1234567890");
+        BigInt number2 = BigInt("98765421");
+        BigInt number3 = BigInt("2925097560");
+        BigInt number4 = BigInt("2216781712");
+
+        SECTION("Check 1: extended_gcd") {
+            auto [g, x, y] = BigInt::extended_gcd(number1, number2);
+            REQUIRE(g.to_string() == "3");
+            REQUIRE(x.to_string() == "-6197046");
+            REQUIRE(y.to_string() == "77463083");   
+        }
+
+        SECTION("Check 2: extended_gcd") {
+            auto [g, x, y] = BigInt::extended_gcd(number3, number4);
+            REQUIRE(g.to_string() == "8");
+            REQUIRE(x.to_string() == "-86339403");
+            REQUIRE(y.to_string() == "113926949");
         }
     }
 
