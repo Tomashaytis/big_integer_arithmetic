@@ -1,6 +1,7 @@
 ﻿#include <bintlib.h>
 
-std::vector<uint32_t> BigInt::parse_number(std::string number, uint64_t base) {
+std::vector<uint32_t> BigInt::parse_number(const std::string& number_str, uint64_t base) {
+	std::string number = number_str;
 	std::vector<uint32_t> chunks;
 	std::string digits = "0123456789";
 	while (number.size() > 0) {
@@ -32,7 +33,7 @@ std::vector<uint32_t> BigInt::parse_number(std::string number, uint64_t base) {
 	return chunks;
 }
 
-std::string BigInt::concat_number(std::vector<uint32_t> chunks, bool is_negative, uint64_t base) {
+std::string BigInt::concat_number(const std::vector<uint32_t>& chunks, bool is_negative, uint64_t base) {
 	std::vector<bool> bits;
 	for (auto chunk : chunks) {
 		for (size_t i = 0; i < 32; i++)
@@ -136,7 +137,7 @@ uint32_t BigInt::leading_zeros(uint32_t value) {
 	return count;
 }
 
-uint32_t BigInt::estimate_quotient(const BigInt dividend, const BigInt divider) {
+uint32_t BigInt::estimate_quotient(const BigInt& dividend, const BigInt& divider) {
 	if (dividend._chunks.size() < divider._chunks.size())
 		return 0;
 
@@ -189,7 +190,13 @@ BigInt BigInt::abs(const BigInt& number) {
 	return result;
 }
 
-BigInt::BigInt(std::string number) {
+BigInt::BigInt(uint32_t number, bool is_negative) {
+	_is_negative = is_negative;
+	_chunks.push_back(number);
+}
+
+BigInt::BigInt(const std::string& number_str) {
+	std::string number = number_str;
 	if (number.size() == 0)
 		throw new std::invalid_argument("Big number is undefined");
 
@@ -203,12 +210,7 @@ BigInt::BigInt(std::string number) {
 	_chunks = parse_number(number, BASE);
 }
 
-BigInt::BigInt(uint32_t number, bool is_negative) {
-	_is_negative = is_negative;
-	_chunks.push_back(number);
-}
-
-BigInt::BigInt(std::vector<uint32_t> chunks, bool is_negative) {
+BigInt::BigInt(const std::vector<uint32_t>& chunks, bool is_negative) {
 	_chunks = chunks;
 	if (_chunks.size() == 0)
 		_chunks.push_back(0);
@@ -499,7 +501,7 @@ BigInt BigInt::mod(const BigInt& lhs, const BigInt& rhs) {
 
 std::tuple<BigInt, BigInt, BigInt> BigInt::extended_gcd(const BigInt& lhs, const BigInt& rhs) {
 	BigInt zero;
-	BigInt one("1");
+	BigInt one = 1;
 	BigInt a = BigInt::abs(lhs);
 	BigInt b = BigInt::abs(rhs);
 
@@ -542,7 +544,7 @@ BigInt BigInt::mod_inverse(const BigInt& a, const BigInt& m)
 	}
 
 	BigInt zero;
-	BigInt one("1");
+	BigInt one = 1;
 	auto [g, x, y] = BigInt::extended_gcd(a, m);
 	if (g != one)
 		throw std::invalid_argument("Modular inverse does not exist");
@@ -608,7 +610,7 @@ BigInt BigInt::right_shift(const BigInt& number, uint32_t shift) {
 }
 
 BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module) {
-	BigInt one(1);
+	BigInt one = 1;
 	uint32_t n = (uint32_t)module._chunks.size();
 	BigInt R = one;
 	R <<= 32 * n; 
@@ -628,7 +630,7 @@ BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt
 }
 
 BigInt BigInt::montgomery_mul_module(const BigInt& rhs, const BigInt& lhs, const BigInt& module) { 
-	BigInt one(1);
+	BigInt one = 1;
 	uint32_t n = (uint32_t)module._chunks.size();
 	BigInt R = one;
 	R <<= 32 * n;
@@ -645,6 +647,9 @@ BigInt BigInt::montgomery_mul_module(const BigInt& rhs, const BigInt& lhs, const
 }
 
 BigInt BigInt::binary_pow(const BigInt& number, const BigInt& degree) {
+	if (degree < 0)
+		throw std::invalid_argument("Raising to a negative power");
+
 	if (degree == 0)
 		return BigInt(1);
 	if (degree == 1)
@@ -671,6 +676,8 @@ BigInt BigInt::binary_pow(const BigInt& number, const BigInt& degree) {
 }
 
 BigInt BigInt::pow(const BigInt& number, const BigInt& degree, uint32_t base) {
+	if (degree < 0)
+		throw std::invalid_argument("Raising to a negative power");
 	if (base > 0 && (base & (base - 1)) != 0 || base == 0)
 		throw std::invalid_argument("Base is not a power of 2");
 	if (base == 1)
@@ -699,13 +706,13 @@ BigInt BigInt::pow(const BigInt& number, const BigInt& degree, uint32_t base) {
 
 	std::vector<BigInt> factors;
 
-	BigInt acc(1);
+	BigInt acc = 1;
 	for (size_t i = 0; i < base; i++) {
 		factors.push_back(acc);
 		acc *= number;
 	}
 
-	acc = BigInt(1);
+	acc = 1;
 	for (int i = (int)degree_bits.size() - 1; i >= 0; i -= bit_depth) {		
 		for (size_t i = 0; i < bit_depth; i++) {
 			acc = BigInt::karatsuba_square(acc);
@@ -722,9 +729,13 @@ BigInt BigInt::pow(const BigInt& number, const BigInt& degree, uint32_t base) {
 	return acc;
 }
 
-BigInt BigInt::montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt& module, uint32_t base) {
-	if (base > 0 && (base & (base - 1)) != 0)
-		throw std::invalid_argument("The base is not a power of 2");
+BigInt BigInt::montgomery_pow(const BigInt& number, const BigInt& degree, const BigInt& module, uint32_t base) {
+	if (degree < 0)
+		throw std::invalid_argument("Raising to a negative power");
+	if (base > 0 && (base & (base - 1)) != 0 || base == 0)
+		throw std::invalid_argument("Base is not a power of 2");
+	if (base == 1)
+		throw std::invalid_argument("Base cannot be equal to 1");
 
 	// TODO: возведение в степень по модулю для больших чисел методом Монтгомери с использованием бинарного/q-арного алгоритма
 	throw std::logic_error("Not implemented");
@@ -733,6 +744,11 @@ BigInt BigInt::montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt
 BigInt& BigInt::operator =(const BigInt& other) {
 	_is_negative = other._is_negative;
 	_chunks = other._chunks;
+	return *this;
+}
+
+BigInt& BigInt::operator =(const std::string& number_str) {
+	*this = BigInt(number_str);
 	return *this;
 }
 

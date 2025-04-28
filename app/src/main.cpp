@@ -3,8 +3,8 @@
 using namespace std;
 
 int main() {
-	BigInt number1 = BigInt("2");
-	BigInt number2 = BigInt("20");
+	BigInt number1 = 2;
+	BigInt number2 = 10;
 	std::cout << BigInt::pow(number1, number2, 8) << endl;
 	return 0;
 }

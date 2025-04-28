@@ -255,7 +255,7 @@ namespace test_bintlib
         BigInt number2 = BigInt("3594647268");
         BigInt number3 = BigInt("5");
         BigInt number4 = BigInt("12");
-        BigInt one(1);
+        BigInt one = 1;
 
         SECTION("Check 1: pow") {
             std::string result = BigInt::pow(number1, number3, 4).to_string();
