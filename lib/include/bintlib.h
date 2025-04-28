@@ -47,6 +47,7 @@ public:
 
 	std::string to_string() const;
 	double to_double() const;
+	uint32_t BigInt::bit_length() const;
 
 	BigInt& operator =(const BigInt& other);
 	BigInt& operator =(const std::string& number_str);
