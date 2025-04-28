@@ -144,7 +144,6 @@ namespace test_bintlib
         }
     }
 
-    /*
     TEST_CASE("BigInt gcd", "[gcd]") {
         BigInt number1 = BigInt("335690610347798156");
         BigInt number2 = BigInt("79170610347800996959");
@@ -161,7 +160,6 @@ namespace test_bintlib
             REQUIRE(result == "12826");
         }
     }
-    */
 
     TEST_CASE("BigInt extended_gcd", "[extended_gcd]") {
         BigInt number1 = BigInt("1234567890");

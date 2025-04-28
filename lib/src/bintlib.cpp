@@ -162,7 +162,7 @@ double BigInt::to_double() const {
 	uint64_t sign = _is_negative ? (1ULL << 63) : 0;
 
 	uint64_t mantissa = 0;
-	size_t shift = BigInt::leading_zeros(_chunks.back());
+	uint32_t shift = BigInt::leading_zeros(_chunks.back());
 	BigInt tmp = *this << shift;
 	if (_chunks.size() > 1) {
 		uint32_t high_bits = tmp._chunks.back() & 0x7FFFFFFF;
@@ -432,6 +432,10 @@ BigInt BigInt::mod(const BigInt& lhs, const BigInt& rhs) {
 
 	if (lhs._is_negative && remainder != 0)
 		remainder = -remainder + BigInt::abs(rhs);
+
+	while (remainder._chunks.size() > 1 && remainder._chunks.back() == 0) {
+		remainder._chunks.pop_back();
+	}
 		
 	return remainder;
 }
