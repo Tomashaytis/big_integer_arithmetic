@@ -9,6 +9,7 @@ Based on C++.
 - [x] Summation and substruction
 - [x] Simple multiplication
 - [x] Karatsuba multiplication
+- [x] Karatsuba squaring
 - [x] Integer division
 - [x] Remainder of division 
 - [x] Shifting
@@ -16,5 +17,5 @@ Based on C++.
 - [x] GCD by extended Euclidian algorithm
 - [x] Mod inverse
 - [x] Montgomery multiplication by module
-- [ ] Binary and q-ary raising to a power
+- [x] Binary and q-ary raising to a power
 - [ ] Montgomery raising to a power by module
