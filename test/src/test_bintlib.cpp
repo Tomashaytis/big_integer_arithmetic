@@ -250,6 +250,31 @@ namespace test_bintlib
         }
     }
 
+    TEST_CASE("BigInt montgomery_mul", "[montgomery_mul]") {
+        BigInt number1 = BigInt("98765432101234567890123456789");
+        BigInt number2 = BigInt("12345678909876543210987654321");
+        BigInt number3 = BigInt("6413641364136413641364136413");
+        BigInt module1 = BigInt("112233445566778899001122334455");
+        BigInt module2 = BigInt("20252025202520252025202520252025");
+        BigInt zero;
+
+        SECTION("Check 1: montgomery_mul") {
+            std::string result = BigInt::montgomery_mul_module(number1, number2, module1).to_string();
+            REQUIRE(result == "58175838322742367489756577539");
+        }
+
+        SECTION("Check 2: montgomery_mul") {
+            std::string result = BigInt::montgomery_mul_module(number1, number3, module2).to_string();
+            REQUIRE(result == "18576382700490687992584161036882");
+        }
+
+        SECTION("Check 3: montgomery_mul") {
+            std::string result = BigInt::montgomery_mul_module(number1, zero, module2).to_string();
+            REQUIRE(result == "0");
+        }
+    }
+
+
     TEST_CASE("BigInt Comparison", "[comparison]") {
         BigInt number1 = BigInt("-12345678901234567890");
         BigInt number2 = BigInt("455675676762455675676762");
