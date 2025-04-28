@@ -151,7 +151,7 @@ uint32_t BigInt::estimate_quotient(const BigInt dividend, const BigInt divider) 
 	uint64_t tmp = (c + b) / (uint64_t)e;
 	uint32_t q = (tmp > UINT32_MAX) ? UINT32_MAX : (uint32_t)tmp;
 
-	return q;
+	return q + 1;
 }
 
 std::string BigInt::to_string() const {
@@ -366,7 +366,7 @@ std::pair<BigInt, BigInt> BigInt::div(const BigInt& lhs, const BigInt& rhs) {
 		while (divider * BigInt(q) > remainder) {
 			q--;
 		}
-		
+
 		quotient_chunks.push_front(q);
 		remainder = remainder - BigInt(q) * divider;
 	}
@@ -378,9 +378,7 @@ std::pair<BigInt, BigInt> BigInt::div(const BigInt& lhs, const BigInt& rhs) {
 
 	BigInt quotient(std::vector<uint32_t>(quotient_chunks.begin(), quotient_chunks.end()), lhs._is_negative ^ rhs._is_negative);
 
-	if (rhs._is_negative)
-		remainder = remainder - BigInt::abs(rhs);
-	else if (lhs._is_negative) {
+	if (lhs._is_negative && remainder != zero) {
 		remainder = -remainder + BigInt::abs(rhs);
 		quotient -= 1;
 	}
@@ -421,48 +419,48 @@ BigInt BigInt::mod(const BigInt& lhs, const BigInt& rhs) {
 
 	remainder = remainder >> shift;
 
-	if (rhs._is_negative)
-		remainder = remainder - BigInt::abs(rhs);
-	else if (lhs._is_negative)
-		remainder = -remainder + BigInt::abs(rhs);
 
+	if (lhs._is_negative && remainder != 0)
+		remainder = -remainder + BigInt::abs(rhs);
+		
 	return remainder;
 }
 
 std::tuple<BigInt, BigInt, BigInt> BigInt::extended_gcd(const BigInt& lhs, const BigInt& rhs) {
-	// TODO: поиск НОД расширенным алгоритмом Евклида
-	throw std::logic_error("Not implemented");
-}
-
-BigInt BigInt::gcd(const BigInt& lhs, const BigInt& rhs) {
+	BigInt zero;
 	BigInt a = BigInt::abs(lhs);
 	BigInt b = BigInt::abs(rhs);
 
-	if (a == BigInt("0")) return b;
-	if (b == BigInt("0")) return a;
+	BigInt x0("1"), y0("0");
+	BigInt x1("0"), y1("1");
 
-	uint32_t shift = 0;
+	while (b != zero) {
+		auto [q, r] = BigInt::div(a, b);
 
-	while ((a._chunks[0] & 1) == 0 && (b._chunks[0] & 1) == 0) {
-		a = a >> 1;
-		b = b >> 1;
-		shift++;
+		BigInt new_x = x0 - q * x1;
+		BigInt new_y = y0 - q * y1;
+
+		a = b;
+		b = r;
+
+		x0 = x1;
+		x1 = new_x;
+
+		y0 = y1;
+		y1 = new_y;
 	}
 
-	while ((a._chunks[0] & 1) == 0) {
-		a = a >> 1;
-	}
+	if (lhs._is_negative) x0 = -x0;
+	if (rhs._is_negative) y0 = -y0;
 
-	while (b != BigInt("0")) {
-		while ((b._chunks[0] & 1) == 0) {
-			b = b >> 1;
-		}
-		if (a > b)
-			std::swap(a, b);
-		b = b - a;
-	}
+	return { a, x0, y0 };
+}
 
-	return a << shift;
+BigInt BigInt::gcd(const BigInt& lhs, const BigInt& rhs) {
+	BigInt zero;
+	if (rhs == zero)
+		return lhs;
+	return BigInt::gcd(rhs, lhs % rhs);
 }
 
 BigInt BigInt::left_shift(const BigInt& number, uint32_t shift) {
