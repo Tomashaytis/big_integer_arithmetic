@@ -146,10 +146,13 @@ uint32_t BigInt::estimate_quotient(const BigInt dividend, const BigInt divider) 
 
 	uint64_t c = (uint64_t)a;
 	if (dividend._chunks.size() > 1)
-		c <<= 32;
+		c = (c << 32) | b;
+	else
+		c = b;
 
-	uint64_t tmp = (c + b) / (uint64_t)e + 1;
-	uint32_t q = (tmp > UINT32_MAX) ? UINT32_MAX : (uint32_t)tmp;
+	c = c / e;
+
+	uint32_t q = (c > UINT32_MAX) ? UINT32_MAX : (uint32_t)c;
 
 	return q + 2;
 }
@@ -347,6 +350,46 @@ BigInt BigInt::karatsuba_mul(const BigInt& lhs, const BigInt& rhs) {
 	return result;
 }
 
+BigInt BigInt::karatsuba_square(const BigInt& number) {
+	size_t split_length = number._chunks.size() / 2;
+	std::vector<uint32_t> number_chunks0(number._chunks.begin(), number._chunks.begin() + split_length);
+	std::vector<uint32_t> number_chunks1(number._chunks.begin() + split_length, number._chunks.end());
+	BigInt number0(number_chunks0);
+	BigInt number1(number_chunks1);
+
+	BigInt r2 = (number1._chunks.size() == 1) ? BigInt::simple_mul(number1, number1) : BigInt::karatsuba_square(number1);
+	BigInt r0 = (number0._chunks.size() == 1) ? BigInt::simple_mul(number0, number0) : BigInt::karatsuba_square(number0);
+	BigInt number01 = number0 + number1;
+	BigInt tmp = (number01._chunks.size() == 1) ? BigInt::simple_mul(number01, number01) : BigInt::karatsuba_square(number01);
+	BigInt r1 = tmp - r2 - r0;
+
+	std::vector<uint32_t> res_chunks2;
+	for (size_t i = 0; i < 2 * split_length; i++)
+		res_chunks2.push_back(0);
+	for (size_t i = 0; i < r2._chunks.size(); i++)
+		res_chunks2.push_back(r2._chunks[i]);
+
+	std::vector<uint32_t> res_chunks1;
+	for (size_t i = 0; i < split_length; i++)
+		res_chunks1.push_back(0);
+	for (size_t i = 0; i < r1._chunks.size(); i++)
+		res_chunks1.push_back(r1._chunks[i]);
+
+	std::vector<uint32_t> res_chunks0 = r0._chunks;
+
+	BigInt res2(res_chunks2);
+	BigInt res1(res_chunks1);
+	BigInt res0(res_chunks0);
+	BigInt result = res2 + res1 + res0;
+	result._is_negative = false;
+
+	while (result._chunks.size() > 1 && result._chunks.back() == 0) {
+		result._chunks.pop_back();
+	}
+
+	return result;
+}
+
 std::pair<BigInt, BigInt> BigInt::div(const BigInt& lhs, const BigInt& rhs) {
 	BigInt zero;
 	if (rhs == zero)
@@ -480,8 +523,7 @@ BigInt BigInt::gcd(const BigInt& lhs, const BigInt& rhs) {
 
 BigInt BigInt::mod_inverse(const BigInt& a, const BigInt& m)
 {
-	if (a > m)
-	{
+	if (a > m) {
 		return BigInt::mod_inverse(a % m, m);
 	}
 
@@ -557,7 +599,6 @@ BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt
 }
 
 BigInt BigInt::pow(const BigInt& number, const BigInt& degree, int base) {
-	// TODO: возведение в степень для больших чисел бинарным (default) и q-арным алгоритмом
 	throw std::logic_error("Not implemented");
 }
 

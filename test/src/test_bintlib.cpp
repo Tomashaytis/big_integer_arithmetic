@@ -94,6 +94,21 @@ namespace test_bintlib
         }
     }
 
+    TEST_CASE("BigInt Karatsuba Square", "[karatsuba_square]") {
+        BigInt number1 = BigInt("12312312312312321");
+        BigInt number2 = BigInt("-455675676762455675676762");
+
+        SECTION("Check 1: karatsuba_square") {
+            std::string result = BigInt::karatsuba_square(number1).to_string();
+            REQUIRE(result == "151593034475917572731289848407041");
+        }
+
+        SECTION("Check 2: karatsuba_square") {
+            std::string result = BigInt::karatsuba_square(number2).to_string();
+            REQUIRE(result == "207640322392921987449429221053931680506706804644");
+        }
+    }
+
     TEST_CASE("BigInt Division", "[division]") {
         BigInt number1 = BigInt("4556756767624525666272634167235675676762");
         BigInt number2 = BigInt("12345678901234567890");

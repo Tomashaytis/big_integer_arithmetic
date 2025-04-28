@@ -31,6 +31,7 @@ public:
 	static BigInt sub(const BigInt& lhs, const BigInt& rhs);
 	static BigInt simple_mul(const BigInt& lhs, const BigInt& rhs);
 	static BigInt karatsuba_mul(const BigInt& lhs, const BigInt& rhs);
+	static BigInt karatsuba_square(const BigInt& number);
 	static std::pair<BigInt, BigInt> div(const BigInt& lhs, const BigInt& rhs);
 	static BigInt mod(const BigInt& lhs, const BigInt& rhs);
 	static BigInt gcd(const BigInt& lhs, const BigInt& rhs);
