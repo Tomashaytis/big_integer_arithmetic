@@ -3,8 +3,9 @@
 using namespace std;
 
 int main() {
-	BigInt number1 = BigInt("-10");
-	BigInt number2 = BigInt("3");
-	std::cout << number1 % number2;
+	BigInt number1 = BigInt("12312312312312321");
+	BigInt number2 = BigInt("12312312312312320");
+	auto [q, r] = BigInt::div(number1, number2);
+	std::cout << q << " " << r << endl;
 	return 0;
 }

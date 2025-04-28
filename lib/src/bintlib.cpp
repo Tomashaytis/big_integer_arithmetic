@@ -148,10 +148,10 @@ uint32_t BigInt::estimate_quotient(const BigInt dividend, const BigInt divider) 
 	if (dividend._chunks.size() > 1)
 		c <<= 32;
 
-	uint64_t tmp = (c + b) / (uint64_t)e;
+	uint64_t tmp = (c + b) / (uint64_t)e + 1;
 	uint32_t q = (tmp > UINT32_MAX) ? UINT32_MAX : (uint32_t)tmp;
 
-	return q + 1;
+	return q + 2;
 }
 
 std::string BigInt::to_string() const {
@@ -294,6 +294,11 @@ BigInt BigInt::simple_mul(const BigInt& lhs, const BigInt& rhs) {
 
 	result._chunks = res_chunks;
 	result._is_negative = lhs._is_negative ^ rhs._is_negative;
+
+	while (result._chunks.size() > 1 && result._chunks.back() == 0) {
+		result._chunks.pop_back();
+	}
+
 	return result;
 }
 
@@ -334,6 +339,11 @@ BigInt BigInt::karatsuba_mul(const BigInt& lhs, const BigInt& rhs) {
 	BigInt res0(res_chunks0);
 	BigInt result = res2 + res1 + res0;
 	result._is_negative = lhs._is_negative ^ rhs._is_negative;
+
+	while (result._chunks.size() > 1 && result._chunks.back() == 0) {
+		result._chunks.pop_back();
+	}
+
 	return result;
 }
 
@@ -372,7 +382,7 @@ std::pair<BigInt, BigInt> BigInt::div(const BigInt& lhs, const BigInt& rhs) {
 	}
 
 	remainder = remainder >> shift;
-	while (!quotient_chunks.empty() && quotient_chunks.back() == 0) {
+	while (quotient_chunks.size() > 1 && quotient_chunks.back() == 0) {
 		quotient_chunks.pop_back();
 	}
 
