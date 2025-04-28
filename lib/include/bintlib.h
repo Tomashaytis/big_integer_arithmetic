@@ -35,6 +35,7 @@ public:
 	static BigInt mod(const BigInt& lhs, const BigInt& rhs);
 	static BigInt gcd(const BigInt& lhs, const BigInt& rhs);
 	static std::tuple<BigInt, BigInt, BigInt> extended_gcd(const BigInt& lhs, const BigInt& rhs);
+	static BigInt BigInt::mod_inverse(const BigInt& a, const BigInt& m);
 	static BigInt left_shift(const BigInt& number, uint32_t shift);
 	static BigInt right_shift(const BigInt& number, uint32_t shift);
 	static BigInt montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module);
