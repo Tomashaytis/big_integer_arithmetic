@@ -438,11 +438,12 @@ BigInt BigInt::mod(const BigInt& lhs, const BigInt& rhs) {
 
 std::tuple<BigInt, BigInt, BigInt> BigInt::extended_gcd(const BigInt& lhs, const BigInt& rhs) {
 	BigInt zero;
+	BigInt one("1");
 	BigInt a = BigInt::abs(lhs);
 	BigInt b = BigInt::abs(rhs);
 
-	BigInt x0("1"), y0("0");
-	BigInt x1("0"), y1("1");
+	BigInt x0 = one, y0 = zero;
+	BigInt x1 = zero, y1 = one;
 
 	while (b != zero) {
 		auto [q, r] = BigInt::div(a, b);
@@ -471,6 +472,25 @@ BigInt BigInt::gcd(const BigInt& lhs, const BigInt& rhs) {
 	if (rhs == zero)
 		return lhs;
 	return BigInt::gcd(rhs, lhs % rhs);
+}
+
+BigInt BigInt::mod_inverse(const BigInt& a, const BigInt& m)
+{
+	if (a > m)
+	{
+		return BigInt::mod_inverse(a % m, m);
+	}
+
+	BigInt zero;
+	BigInt one("1");
+	auto [g, x, y] = BigInt::extended_gcd(a, m);
+	if (g != one)
+		throw std::invalid_argument("Modular inverse does not exist");
+
+	if (x < zero)
+		x += m;
+
+	return x;
 }
 
 BigInt BigInt::left_shift(const BigInt& number, uint32_t shift) {
