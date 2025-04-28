@@ -677,11 +677,32 @@ BigInt BigInt::binary_pow(const BigInt& number, const BigInt& degree) {
 	return acc;
 }
 
-BigInt BigInt::pow(const BigInt& number, const BigInt& degree, int base) {
-	throw std::logic_error("Not implemented");
+BigInt BigInt::pow(const BigInt& number, const BigInt& degree, uint32_t base) {
+	if (base > 0 && (base & (base - 1)) != 0)
+		throw std::invalid_argument("The base is not a power of 2");
+
+	std::vector<bool> degree_bits;
+	for (auto chunk : degree._chunks) {
+		for (size_t i = 0; i < 32; i++)
+			degree_bits.push_back((chunk >> i) & 1);
+	}
+
+	while (degree_bits.back() == 0) {
+		degree_bits.pop_back();
+	}
+
+	BigInt acc = number;
+	for (int i = (int)degree_bits.size() - 2; i >= 0; i--) {
+		acc = BigInt::karatsuba_square(acc);
+		if (degree_bits[i] == 1)
+			acc *= number;
+	}
 }
 
-BigInt BigInt::montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt& module, int base) {
+BigInt BigInt::montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt& module, uint32_t base) {
+	if (base > 0 && (base & (base - 1)) != 0)
+		throw std::invalid_argument("The base is not a power of 2");
+
 	// TODO: возведение в степень по модулю для больших чисел методом Монтгомери с использованием бинарного/q-арного алгоритма
 	throw std::logic_error("Not implemented");
 }

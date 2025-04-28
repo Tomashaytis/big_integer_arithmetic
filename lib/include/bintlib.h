@@ -42,8 +42,8 @@ public:
 	static BigInt montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module);
 	static BigInt montgomery_mul_module(const BigInt& rhs, const BigInt& lhs, const BigInt& module);
 	static BigInt binary_pow(const BigInt& number, const BigInt& degree);
-	static BigInt pow(const BigInt& number, const BigInt& degree, int base = 2);
-	static BigInt montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt& module, int base = 2);
+	static BigInt pow(const BigInt& number, const BigInt& degree, uint32_t base = 2);
+	static BigInt montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt& module, uint32_t base = 2);
 
 	std::string to_string() const;
 	uint32_t bit_length() const;
