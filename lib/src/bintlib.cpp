@@ -163,7 +163,7 @@ uint32_t BigInt::bit_length() const {
 	if (*this == zero)
 		return 0;
 
-	uint32_t total_bits = (_chunks.size() - 1) * 32;
+	uint32_t total_bits = (uint32_t)(_chunks.size() - 1) * 32;
 	uint32_t top_chunk = _chunks.back();
 	total_bits += 32 - BigInt::leading_zeros(top_chunk);
 	return total_bits;
@@ -620,7 +620,7 @@ BigInt BigInt::right_shift(const BigInt& number, uint32_t shift) {
 }
 
 BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module) {
-	BigInt one("1");
+	BigInt one(1);
 	uint32_t n = module.bit_length();
 	BigInt R = one << n;
 
@@ -638,7 +638,7 @@ BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt
 }
 
 BigInt BigInt::montgomery_mul_module(const BigInt& rhs, const BigInt& lhs, const BigInt& module) { 
-	BigInt one("1");
+	BigInt one(1);
 	uint32_t n = module.bit_length();
 	BigInt R = one << n;
 
