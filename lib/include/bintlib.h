@@ -46,6 +46,7 @@ public:
 	static BigInt montgomery_pow(const BigInt& rhs, const BigInt& lhs, const BigInt& module, int base = 2);
 
 	std::string to_string() const;
+	uint32_t bit_length() const;
 	double to_double() const;
 
 	BigInt& operator =(const BigInt& other);

@@ -157,6 +157,18 @@ uint32_t BigInt::estimate_quotient(const BigInt dividend, const BigInt divider) 
 	return q + 2;
 }
 
+uint32_t BigInt::bit_length() const {
+	BigInt zero;
+
+	if (*this == zero)
+		return 0;
+
+	uint32_t total_bits = (_chunks.size() - 1) * 32;
+	uint32_t top_chunk = _chunks.back();
+	total_bits += 32 - BigInt::leading_zeros(top_chunk);
+	return total_bits;
+}
+
 std::string BigInt::to_string() const {
 	return BigInt::concat_number(_chunks, _is_negative);
 }
@@ -609,13 +621,11 @@ BigInt BigInt::right_shift(const BigInt& number, uint32_t shift) {
 
 BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module) {
 	BigInt one("1");
-	uint32_t n = module._chunks.size(); 
-	BigInt R = one;
-	R <<= 32 * n; 
-	
-	BigInt R_mod = R;
-	BigInt m_prime = BigInt::mod_inverse(module, R_mod);
-	m_prime = R_mod - m_prime; 
+	uint32_t n = module.bit_length();
+	BigInt R = one << n;
+
+	BigInt m_prime = BigInt::mod_inverse(module, R);
+	m_prime = R - m_prime; 
 
 	BigInt x = rhs * lhs;
 	BigInt m = (x * m_prime) % R;
@@ -629,13 +639,11 @@ BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt
 
 BigInt BigInt::montgomery_mul_module(const BigInt& rhs, const BigInt& lhs, const BigInt& module) { 
 	BigInt one("1");
-	uint32_t n = module._chunks.size();
-	BigInt R = one;
-	R <<= 32 * n;
+	uint32_t n = module.bit_length();
+	BigInt R = one << n;
 
-	BigInt R_mod = R;
-	BigInt m_prime = BigInt::mod_inverse(module, R_mod);
-	m_prime = R_mod - m_prime; 
+	BigInt m_prime = BigInt::mod_inverse(module, R);
+	m_prime = R - m_prime; 
 
 	BigInt Ra = (lhs * R) % module;
 	BigInt Rb = (rhs * R) % module;
