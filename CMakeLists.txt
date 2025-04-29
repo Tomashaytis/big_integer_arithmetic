@@ -13,6 +13,7 @@ endif()
 
 add_subdirectory(lib)
 add_subdirectory(app)
+add_subdirectory(stat)
 
 if(TESTING)
     message(STATUS "Enabling tests")
