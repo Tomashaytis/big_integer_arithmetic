@@ -21,7 +21,7 @@ Based on C++.
 - [x] Montgomery raising to a power by module
 
 **Statistics for numbers (2048 bit):**
-| Operation       | Algorithm       | Time, s   | status |
+| Operation       | Algorithm       | Time, s   | Status |
 |-----------------|-----------------|-----------|--------|
 | summation       | basic           | 0,0000182 | valid  |
 | substruction    | basic           | 0,0000057 | valid  |
