@@ -20,7 +20,7 @@ Based on C++.
 - [x] Binary and q-ary raising to a power
 - [x] Montgomery raising to a power by module
 
-**Statistics:**
+**Statistics for numbers (2048 bit):**
 | Operation       | Algorithm       | Time, s   | status |
 |-----------------|-----------------|-----------|--------|
 | summation       | basic           | 0,0000182 | valid  |
