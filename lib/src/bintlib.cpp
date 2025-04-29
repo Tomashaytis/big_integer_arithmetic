@@ -621,12 +621,9 @@ BigInt BigInt::right_shift(const BigInt& number, uint32_t shift) {
 	return BigInt(chunks2, number._is_negative);
 }
 
-BigInt BigInt::montgomery(const BigInt& rhs, const BigInt& lhs,const BigInt& module, const BigInt& R) {
-	BigInt m_prime = BigInt::mod_inverse(module, R);
-	m_prime = R - m_prime;
-
+BigInt BigInt::montgomery(const BigInt& rhs, const BigInt& lhs,const BigInt& module, const BigInt& R, const BigInt& n_prime) {
 	BigInt x = rhs * lhs;
-	BigInt m = (x * m_prime) % R;
+	BigInt m = (x * n_prime) % R;
 	BigInt t = (x + m * module) / R;
 
 	if (t >= module)
@@ -640,14 +637,14 @@ BigInt BigInt::montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt
 	uint32_t n = module.bit_length();
 	BigInt R = one << n;
 
-	BigInt m_prime = BigInt::mod_inverse(module, R);
-	m_prime = R - m_prime;
+	BigInt n_prime = BigInt::mod_inverse(module, R);
+	n_prime = R - n_prime;
 
 	BigInt Ra = (lhs * R) % module;
 	BigInt Rb = (rhs * R) % module;
-	BigInt Rc = BigInt::montgomery(Ra, Rb, module, R);
+	BigInt Rc = BigInt::montgomery(Ra, Rb, module, R, n_prime);
 
-	return BigInt::montgomery(Rc, one, module, R);
+	return BigInt::montgomery(Rc, one, module, R, n_prime);
 }
 
 BigInt BigInt::binary_pow(const BigInt& number, const BigInt& degree) {
@@ -741,8 +738,59 @@ BigInt BigInt::montgomery_pow(const BigInt& number, const BigInt& degree, const 
 	if (base == 1)
 		throw std::invalid_argument("Base cannot be equal to 1");
 
-	// TODO: возведение в степень по модулю для больших чисел методом Монтгомери с использованием бинарного/q-арного алгоритма
-	throw std::logic_error("Not implemented");
+	BigInt zero;
+	BigInt one = 1;
+	uint32_t n = module.bit_length();
+	BigInt R = one << n;
+	BigInt n_prime = R - BigInt::mod_inverse(module, R);
+
+	BigInt Ra = (number * R) % module;
+	BigInt R1 = R % module;
+
+	std::vector<bool> degree_bits;
+	for (auto chunk : degree._chunks) {
+		for (size_t i = 0; i < 32; ++i) {
+			degree_bits.push_back((chunk >> i) & 1);
+		}
+	}
+
+	while (!degree_bits.empty() && degree_bits.back() == 0) {
+		degree_bits.pop_back();
+	}
+
+	uint32_t bit_depth = (uint32_t)(32 - BigInt::leading_zeros(base)) - 1;
+
+	while (degree_bits.size() % bit_depth != 0) {
+		degree_bits.push_back(false);
+	}
+
+	std::vector<BigInt> factors;
+	BigInt acc = R1;
+	factors.push_back(R1); 
+	for (size_t i = 1; i < base; ++i) {
+		acc = BigInt::montgomery(acc, Ra, module, R, n_prime);
+		factors.push_back(acc);
+	}
+
+	acc = R1;
+
+	for (int i = (int)degree_bits.size() - 1; i >= 0; i -= bit_depth) {
+		for (uint32_t j = 0; j < bit_depth; ++j) {
+			acc = BigInt::montgomery(acc, acc, module, R, n_prime);
+		}
+
+		uint32_t factor_index = 0;
+		for (uint32_t j = 0; j < bit_depth; ++j) {
+			factor_index |= (uint32_t)degree_bits[i - j] << (bit_depth - j - 1);
+		}
+
+		if (factor_index != 0) {
+			acc = BigInt::montgomery(acc, factors[factor_index], module, R, n_prime);
+		}
+	}
+
+	acc = BigInt::montgomery(acc, one, module, R, n_prime);
+	return acc;
 }
 
 BigInt& BigInt::operator =(const BigInt& other) {

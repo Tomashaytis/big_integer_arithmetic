@@ -18,4 +18,4 @@ Based on C++.
 - [x] Mod inverse
 - [x] Montgomery multiplication by module
 - [x] Binary and q-ary raising to a power
-- [ ] Montgomery raising to a power by module
+- [x] Montgomery raising to a power by module

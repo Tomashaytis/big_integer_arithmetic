@@ -39,7 +39,7 @@ public:
 	static BigInt BigInt::mod_inverse(const BigInt& a, const BigInt& m);
 	static BigInt left_shift(const BigInt& number, uint32_t shift);
 	static BigInt right_shift(const BigInt& number, uint32_t shift);
-	static BigInt montgomery(const BigInt& rhs, const BigInt& lhs, const BigInt& module, const BigInt& R);
+	static BigInt montgomery(const BigInt& rhs, const BigInt& lhs, const BigInt& module, const BigInt& R, const BigInt& n_prime);
 	static BigInt montgomery_mul(const BigInt& rhs, const BigInt& lhs, const BigInt& module);
 	static BigInt binary_pow(const BigInt& number, const BigInt& degree);
 	static BigInt pow(const BigInt& number, const BigInt& degree, uint32_t base = 2);

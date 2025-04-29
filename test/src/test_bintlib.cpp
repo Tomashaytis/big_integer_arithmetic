@@ -282,18 +282,40 @@ namespace test_bintlib
         BigInt zero;
 
         SECTION("Check 1: montgomery_mul") {
-            std::string result = BigInt::montgomery_mul_module(number1, number2, module1).to_string();
+            std::string result = BigInt::montgomery_mul(number1, number2, module1).to_string();
             REQUIRE(result == "58175838322742367489756577539");
         }
 
         SECTION("Check 2: montgomery_mul") {
-            std::string result = BigInt::montgomery_mul_module(number1, number3, module2).to_string();
+            std::string result = BigInt::montgomery_mul(number1, number3, module2).to_string();
             REQUIRE(result == "18576382700490687992584161036882");
         }
 
         SECTION("Check 3: montgomery_mul") {
-            std::string result = BigInt::montgomery_mul_module(number1, zero, module2).to_string();
+            std::string result = BigInt::montgomery_mul(number1, zero, module2).to_string();
             REQUIRE(result == "0");
+        }
+    }
+
+    TEST_CASE("BigInt Montgomery Power", "[montgomery_pow]") {
+        BigInt number1("202520252025202520252025202520252025");
+        BigInt number2("64136413641364136413641364136413");
+        BigInt number3("2904202529042025290420252904202529042025");
+        BigInt module("10000000000000000000000000000000007");
+
+        SECTION("Check 1: montgomery_mul") {
+            std::string result = BigInt::montgomery_pow(number1, number2, module, 32).to_string();
+            REQUIRE(result == "4982209825957461206282418756295327");
+        }
+
+        SECTION("Check 2: montgomery_mul") {
+            std::string result = BigInt::montgomery_pow(number1, number3, module, 8).to_string();
+            REQUIRE(result == "4381271315878122186823853889463080");
+        }
+
+        SECTION("Check 3: montgomery_mul") {
+            std::string result = BigInt::montgomery_pow(number1, number3, module, 1024).to_string();
+            REQUIRE(result == "4381271315878122186823853889463080");
         }
     }
 
