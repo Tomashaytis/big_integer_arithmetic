@@ -655,6 +655,8 @@ BigInt BigInt::binary_pow(const BigInt& number, const BigInt& degree) {
 		return BigInt(1);
 	if (degree == 1)
 		return number;
+	if (number == 0 || number == 1)
+		return number;
 
 	std::vector<bool> degree_bits;
 	for (auto chunk : degree._chunks) {
@@ -687,6 +689,8 @@ BigInt BigInt::pow(const BigInt& number, const BigInt& degree, uint32_t base) {
 	if (degree == 0)
 		return BigInt(1);
 	if (degree == 1)
+		return number;
+	if (number == 0 || number == 1)
 		return number;
 
 	int bit_depth = (size_t)(32 - BigInt::leading_zeros(base)) - 1;
