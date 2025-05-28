@@ -274,6 +274,10 @@ BigInt BigInt::sum(const BigInt& lhs, const BigInt& rhs) {
 		}
 	}
 
+	while (res._chunks.size() > 1 && res._chunks.back() == 0) {
+		res._chunks.pop_back();
+	}
+
 	return res;
 }
 
@@ -309,10 +313,6 @@ BigInt BigInt::simple_mul(const BigInt& lhs, const BigInt& rhs) {
 
 	result._chunks = res_chunks;
 	result._is_negative = lhs._is_negative ^ rhs._is_negative;
-
-	while (result._chunks.size() > 1 && result._chunks.back() == 0) {
-		result._chunks.pop_back();
-	}
 
 	return result;
 }
