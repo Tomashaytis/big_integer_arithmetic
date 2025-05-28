@@ -149,7 +149,7 @@ uint32_t BigInt::estimate_quotient(const BigInt& dividend, const BigInt& divider
 	if (dividend._chunks.size() > 1)
 		c = (c << 32) | b;
 	else
-		c = b;
+		c = a;
 
 	c = c / e;
 
